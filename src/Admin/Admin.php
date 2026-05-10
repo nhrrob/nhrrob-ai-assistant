@@ -24,7 +24,7 @@ class Admin {
             __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
             __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
             'manage_options',
-            'nhraa-settings',
+            'nhrada-settings',
             array( $this, 'render_app' ),
             $icon,
             30
@@ -32,7 +32,7 @@ class Admin {
     }
 
     public function enqueue_scripts( $hook ) {
-        if ( 'toplevel_page_nhraa-settings' !== $hook ) {
+        if ( 'toplevel_page_nhrada-settings' !== $hook ) {
             return;
         }
 
@@ -44,7 +44,7 @@ class Admin {
         $assets = require $asset_file;
 
         wp_enqueue_script(
-            'nhraa-app',
+            'nhrada-app',
             NHRADA_PLUGIN_URL . 'admin/build/index.js',
             $assets['dependencies'],
             $assets['version'],
@@ -52,7 +52,7 @@ class Admin {
         );
 
         wp_enqueue_style(
-            'nhraa-app-css',
+            'nhrada-app-css',
             NHRADA_PLUGIN_URL . 'admin/build/style-index.css',
             array(),
             $assets['version']
@@ -60,14 +60,14 @@ class Admin {
     }
 
     public function render_app() {
-        echo '<div id="nhraa-admin-app" style="margin:0 -20px -10px;"></div>';
+        echo '<div id="nhrada-admin-app" style="margin:0 -20px -10px;"></div>';
     }
 
     public function plugin_action_links( $links, $file ) {
         if ( plugin_basename( NHRADA_PLUGIN_DIR . 'nhrrob-ai-developer-assistant.php' ) === $file ) {
             $settings_link = sprintf(
                 '<a href="%s">%s</a>',
-                admin_url( 'admin.php?page=nhraa-settings' ),
+                admin_url( 'admin.php?page=nhrada-settings' ),
                 __( 'Open', 'nhrrob-ai-developer-assistant' )
             );
             array_unshift( $links, $settings_link );

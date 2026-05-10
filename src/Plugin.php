@@ -31,7 +31,7 @@ class Plugin {
     }
 
     public function load_php_snippets() {
-        $snippets_file = WP_CONTENT_DIR . '/nhraa-snippets.php';
+        $snippets_file = WP_CONTENT_DIR . '/nhrada-snippets.php';
         if ( file_exists( $snippets_file ) ) {
             require_once $snippets_file;
         }

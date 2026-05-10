@@ -78,13 +78,13 @@ class Executor {
     }
 
     private function apply_php_change( $change_id, $code ) {
-        $snippets_file = WP_CONTENT_DIR . '/nhraa-snippets.php';
+        $snippets_file = WP_CONTENT_DIR . '/nhrada-snippets.php';
         $original_value = file_exists( $snippets_file ) ? file_get_contents( $snippets_file ) : "<?php\n// WP AI Developer — Managed Snippets File\n// Do not edit manually. Use the AI Developer plugin to manage.\n\n";
         
         $block = "\n// [NHRAA-SNIPPET-{$change_id} | " . gmdate('Y-m-d') . "]\n{$code}\n// [/NHRAA-SNIPPET-{$change_id}]\n";
         $new_value = $original_value . $block;
 
-        $this->changelog->create_snapshot( $change_id, 'file', 'nhraa-snippets.php', $original_value, $new_value );
+        $this->changelog->create_snapshot( $change_id, 'file', 'nhrada-snippets.php', $original_value, $new_value );
         file_put_contents( $snippets_file, $new_value );
         return true;
     }

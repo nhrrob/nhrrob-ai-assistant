@@ -69,7 +69,7 @@ class Undo {
     }
 
     private function revert_file( $filename, $original_value, $change_id ) {
-        if ( 'nhraa-snippets.php' === $filename ) {
+        if ( 'nhrada-snippets.php' === $filename ) {
             $filepath = WP_CONTENT_DIR . '/' . $filename;
             
             if ( ! file_exists( $filepath ) ) {

@@ -304,7 +304,7 @@ can_do: true if you can implement this, false if you cannot or should not.
 change_type:
   - \"css\" = add/change styles (goes into WordPress custom CSS)
   - \"js\" = JavaScript snippet (output in footer)
-  - \"php\" = PHP snippet (goes into managed snippets file at /wp-content/nhraa-snippets.php)
+  - \"php\" = PHP snippet (goes into managed snippets file at /wp-content/nhrada-snippets.php)
   - \"option\" = WordPress option update via update_option()
   - \"none\" = answering a question or diagnosing without making a change
 file_target:
