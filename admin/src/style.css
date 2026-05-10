@@ -1,0 +1,126 @@
+.wpad-react-wrap {
+    display: flex;
+    margin: 20px 20px 0 0;
+    background: #fff;
+    min-height: calc(100vh - 100px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.wpad-sidebar {
+    width: 250px;
+    background: #f8f9fa;
+    border-right: 1px solid #e2e8f0;
+    padding: 20px 0;
+}
+
+.wpad-logo {
+    display: flex;
+    align-items: center;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    color: #6366f1;
+}
+
+.wpad-logo h2 {
+    margin: 0 0 0 10px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wpad-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.wpad-nav li {
+    margin: 0;
+}
+
+.wpad-nav button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 15px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    color: #475569;
+    transition: all 0.2s;
+}
+
+.wpad-nav button:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.wpad-nav button.active {
+    background: #ebf4ff;
+    color: #2563eb;
+    border-right: 3px solid #2563eb;
+    font-weight: 500;
+}
+
+.wpad-nav button .dashicons {
+    margin-right: 10px;
+}
+
+.wpad-content {
+    flex: 1;
+    padding: 30px;
+}
+
+.wpad-form-group {
+    margin-bottom: 25px;
+}
+
+.wpad-form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1e293b;
+}
+
+.wpad-form-group input {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+}
+
+.wpad-notice {
+    padding: 12px 15px;
+    border-left: 4px solid;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+}
+
+.wpad-notice.wpad-success {
+    background: #ecfdf5;
+    border-color: #10b981;
+    color: #065f46;
+}
+
+.wpad-notice.wpad-error {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.wpad-notice p { margin: 0; }
+
+.wpad-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.wpad-status-applied { background: #dcfce7; color: #166534; }
+.wpad-status-undone { background: #fef3c7; color: #92400e; }

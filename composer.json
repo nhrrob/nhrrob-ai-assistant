@@ -1,0 +1,13 @@
+{
+    "name": "nhr/nhrrob-ai-assistant",
+    "description": "NHR AI Developer Assistant",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "psr-4": {
+            "NHR\\AIAssistant\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    }
+}

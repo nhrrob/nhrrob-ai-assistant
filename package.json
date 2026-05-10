@@ -1,0 +1,16 @@
+{
+  "name": "nhrrob-ai-assistant",
+  "version": "1.0.0",
+  "description": "React Admin for WP AI Developer Assistant",
+  "scripts": {
+    "build": "wp-scripts build admin/src/index.js --output-path=admin/build",
+    "start": "wp-scripts start admin/src/index.js --output-path=admin/build"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^26.13.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
