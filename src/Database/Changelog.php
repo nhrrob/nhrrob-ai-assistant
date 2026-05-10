@@ -1,5 +1,5 @@
 <?php
-namespace NHR\AIAssistant\Database;
+namespace NHR\AIDeveloperAssistant\Database;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -11,7 +11,7 @@ class Changelog {
         global $wpdb;
 
         $wpdb->insert(
-            $wpdb->prefix . 'nhraa_changes',
+            $wpdb->prefix . 'nhrada_changes',
             array(
                 'request'     => $request_msg,
                 'description' => $description,
@@ -31,7 +31,7 @@ class Changelog {
         global $wpdb;
 
         $wpdb->insert(
-            $wpdb->prefix . 'nhraa_snapshots',
+            $wpdb->prefix . 'nhrada_snapshots',
             array(
                 'change_id'      => $change_id,
                 'snapshot_type'  => $snapshot_type,

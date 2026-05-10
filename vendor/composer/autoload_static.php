@@ -9,12 +9,12 @@ class ComposerStaticInit7775d2c57f16f90c1ceaddde6f39b442
     public static $prefixLengthsPsr4 = array (
         'N' =>
         array (
-            'NHR\\AIAssistant\\' => 16,
+            'NHR\\AIDeveloperAssistant\\' => 25,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'NHR\\AIAssistant\\' =>
+        'NHR\\AIDeveloperAssistant\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

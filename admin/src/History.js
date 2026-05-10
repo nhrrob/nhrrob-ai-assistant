@@ -19,14 +19,14 @@ const TYPE_COLORS = {
 const TypeBadge = ({ type }) => {
     const cfg = TYPE_COLORS[type] || TYPE_COLORS.none;
     return (
-        <span className="nhraa-type-badge" style={{ background: cfg.bg, color: cfg.color }}>
+        <span className="nhrada-type-badge" style={{ background: cfg.bg, color: cfg.color }}>
             {cfg.label}
         </span>
     );
 };
 
 const StatusBadge = ({ status }) => (
-    <span className={`nhraa-status-badge nhraa-status-badge--${status}`}>
+    <span className={`nhrada-status-badge nhrada-status-badge--${status}`}>
         {status === 'applied' ? 'Applied' : 'Undone'}
     </span>
 );
@@ -52,13 +52,13 @@ const formatDate = (dateStr) => {
 
 const CodeBlock = ({ code }) => {
     const [open, setOpen] = useState(false);
-    if (!code) return <span className="nhraa-col-done">—</span>;
+    if (!code) return <span className="nhrada-col-done">—</span>;
     return (
         <div>
-            <button type="button" className="nhraa-code-toggle" onClick={() => setOpen(v => !v)}>
+            <button type="button" className="nhrada-code-toggle" onClick={() => setOpen(v => !v)}>
                 {open ? 'Hide code' : 'View code'}
             </button>
-            {open && <pre className="nhraa-code-preview">{code}</pre>}
+            {open && <pre className="nhrada-code-preview">{code}</pre>}
         </div>
     );
 };
@@ -71,7 +71,7 @@ const History = () => {
 
     const loadHistory = useCallback(() => {
         setLoading(true);
-        apiFetch({ path: '/nhraa/v1/history' })
+        apiFetch({ path: '/nhrada/v1/history' })
             .then(res => {
                 setItems(res || []);
                 setLoading(false);
@@ -86,7 +86,7 @@ const History = () => {
 
         setUndoingId(changeId);
         apiFetch({
-            path: '/nhraa/v1/undo',
+            path: '/nhrada/v1/undo',
             method: 'POST',
             data: { change_id: changeId },
         }).then(res => {
@@ -108,34 +108,34 @@ const History = () => {
     }, []);
 
     return (
-        <div className="nhraa-panel">
-            <div className="nhraa-panel-header">
+        <div className="nhrada-panel">
+            <div className="nhrada-panel-header">
                 <div>
-                    <h1 className="nhraa-panel-title">Change History</h1>
-                    <p className="nhraa-panel-desc">Every change your AI developer has made to your site.</p>
+                    <h1 className="nhrada-panel-title">Change History</h1>
+                    <p className="nhrada-panel-desc">Every change your AI developer has made to your site.</p>
                 </div>
-                <button className="nhraa-btn-ghost" onClick={loadHistory} disabled={loading}>
+                <button className="nhrada-btn-ghost" onClick={loadHistory} disabled={loading}>
                     {loading ? 'Refreshing…' : 'Refresh'}
                 </button>
             </div>
 
             {notice && (
-                <div className={`nhraa-notice nhraa-notice--${notice.type}`}>
+                <div className={`nhrada-notice nhrada-notice--${notice.type}`}>
                     {notice.text}
                 </div>
             )}
 
             {loading ? (
-                <div className="nhraa-loading-rows">
-                    {[1, 2, 3].map(i => <div key={i} className="nhraa-skeleton-row" />)}
+                <div className="nhrada-loading-rows">
+                    {[1, 2, 3].map(i => <div key={i} className="nhrada-skeleton-row" />)}
                 </div>
             ) : items.length === 0 ? (
-                <div className="nhraa-empty-panel">
+                <div className="nhrada-empty-panel">
                     <p>No changes have been made yet. Go to the Chat tab and ask your AI developer to make a change.</p>
                 </div>
             ) : (
-                <div className="nhraa-history-table-wrap">
-                    <table className="nhraa-history-table">
+                <div className="nhrada-history-table-wrap">
+                    <table className="nhrada-history-table">
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -150,22 +150,22 @@ const History = () => {
                         </thead>
                         <tbody>
                             {items.map(item => (
-                                <tr key={item.id} className={item.status === 'undone' ? 'nhraa-row--undone' : ''}>
-                                    <td className="nhraa-col-date">{formatDate(item.created_at)}</td>
-                                    <td className="nhraa-col-request">
-                                        <span className="nhraa-truncate" title={item.request}>{item.request}</span>
+                                <tr key={item.id} className={item.status === 'undone' ? 'nhrada-row--undone' : ''}>
+                                    <td className="nhrada-col-date">{formatDate(item.created_at)}</td>
+                                    <td className="nhrada-col-request">
+                                        <span className="nhrada-truncate" title={item.request}>{item.request}</span>
                                     </td>
-                                    <td className="nhraa-col-desc">
-                                        <span className="nhraa-truncate" title={item.description}>{item.description}</span>
+                                    <td className="nhrada-col-desc">
+                                        <span className="nhrada-truncate" title={item.description}>{item.description}</span>
                                     </td>
                                     <td><TypeBadge type={item.change_type} /></td>
-                                    <td className="nhraa-col-target">{formatTarget(item.file_target)}</td>
+                                    <td className="nhrada-col-target">{formatTarget(item.file_target)}</td>
                                     <td><CodeBlock code={item.code} /></td>
                                     <td><StatusBadge status={item.status} /></td>
                                     <td>
                                         {item.status === 'applied' ? (
                                             <button
-                                                className="nhraa-undo-btn-sm"
+                                                className="nhrada-undo-btn-sm"
                                                 onClick={() => handleUndo(item.id)}
                                                 disabled={undoingId === item.id}
                                             >
@@ -174,7 +174,7 @@ const History = () => {
                                                 )}
                                             </button>
                                         ) : (
-                                            <span className="nhraa-col-done">—</span>
+                                            <span className="nhrada-col-done">—</span>
                                         )}
                                     </td>
                                 </tr>

@@ -41,7 +41,7 @@ const Chat = () => {
     const messagesAreaRef = useRef(null);
 
     useEffect(() => {
-        apiFetch({ path: '/nhraa/v1/messages' })
+        apiFetch({ path: '/nhrada/v1/messages' })
             .then(res => {
                 setMessages(res.messages || []);
                 setUsageInfo(res.usage || null);
@@ -66,7 +66,7 @@ const Chat = () => {
         setLoading(true);
 
         apiFetch({
-            path: '/nhraa/v1/chat',
+            path: '/nhrada/v1/chat',
             method: 'POST',
             data: { message: text },
         }).then(res => {
@@ -107,7 +107,7 @@ const Chat = () => {
 
     const handleUndo = useCallback((changeId, msgId) => {
         apiFetch({
-            path: '/nhraa/v1/undo',
+            path: '/nhrada/v1/undo',
             method: 'POST',
             data: { change_id: changeId },
         }).then(res => {
@@ -146,28 +146,28 @@ const Chat = () => {
 
     if (initialLoading) {
         return (
-            <div className="nhraa-chat-init">
-                <div className="nhraa-spinner-ring" />
+            <div className="nhrada-chat-init">
+                <div className="nhrada-spinner-ring" />
                 <p>Loading conversation…</p>
             </div>
         );
     }
 
     return (
-        <div className="nhraa-chat-page">
-            <div className="nhraa-messages-scroll" ref={messagesAreaRef}>
-                <div className="nhraa-messages-inner">
+        <div className="nhrada-chat-page">
+            <div className="nhrada-messages-scroll" ref={messagesAreaRef}>
+                <div className="nhrada-messages-inner">
 
                     {messages.length === 0 && (
-                        <div className="nhraa-empty-state">
-                            <div className="nhraa-empty-icon">
+                        <div className="nhrada-empty-state">
+                            <div className="nhrada-empty-icon">
                                 <CodeIcon />
                             </div>
                             <h2>Your AI Developer is ready</h2>
                             <p>Describe a change in plain English and I'll implement it on your site — no coding needed.</p>
-                            <div className="nhraa-suggestion-chips">
+                            <div className="nhrada-suggestion-chips">
                                 {SUGGESTIONS.map(s => (
-                                    <button key={s} className="nhraa-chip" onClick={() => handleSuggestion(s)}>
+                                    <button key={s} className="nhrada-chip" onClick={() => handleSuggestion(s)}>
                                         {s}
                                     </button>
                                 ))}
@@ -178,52 +178,52 @@ const Chat = () => {
                     {messages.map((msg, index) => (
                         <div
                             key={msg.id || index}
-                            className={`nhraa-msg nhraa-msg--${msg.role}${msg.is_error ? ' nhraa-msg--error' : ''}`}
+                            className={`nhrada-msg nhrada-msg--${msg.role}${msg.is_error ? ' nhrada-msg--error' : ''}`}
                         >
                             {msg.role === 'assistant' && (
-                                <div className="nhraa-msg-avatar" aria-hidden>
+                                <div className="nhrada-msg-avatar" aria-hidden>
                                     <CodeIcon />
                                 </div>
                             )}
-                            <div className="nhraa-msg-body">
-                                <div className="nhraa-msg-bubble">
+                            <div className="nhrada-msg-body">
+                                <div className="nhrada-msg-bubble">
                                     <p>{msg.content}</p>
                                     {msg.warnings && (
-                                        <p className="nhraa-msg-warning">
+                                        <p className="nhrada-msg-warning">
                                             <span>⚠</span> {msg.warnings}
                                         </p>
                                     )}
                                 </div>
                                 {msg.upgrade_required && (
-                                    <a href="#" className="nhraa-upgrade-cta">
+                                    <a href="#" className="nhrada-upgrade-cta">
                                         Upgrade to Pro — unlimited requests for $9/mo →
                                     </a>
                                 )}
                                 {msg.change_id && !msg.undone && (
                                     <button
-                                        className="nhraa-undo-btn"
+                                        className="nhrada-undo-btn"
                                         onClick={() => handleUndo(msg.change_id, msg.id)}
                                     >
                                         <UndoIcon /> Undo this change
                                     </button>
                                 )}
                                 {msg.undone && (
-                                    <span className="nhraa-undone-tag">Undone</span>
+                                    <span className="nhrada-undone-tag">Undone</span>
                                 )}
                             </div>
                         </div>
                     ))}
 
                     {loading && (
-                        <div className="nhraa-msg nhraa-msg--assistant">
-                            <div className="nhraa-msg-avatar" aria-hidden>
+                        <div className="nhrada-msg nhrada-msg--assistant">
+                            <div className="nhrada-msg-avatar" aria-hidden>
                                 <CodeIcon />
                             </div>
-                            <div className="nhraa-msg-body">
-                                <div className="nhraa-msg-bubble nhraa-typing-bubble">
-                                    <span className="nhraa-dot" />
-                                    <span className="nhraa-dot" />
-                                    <span className="nhraa-dot" />
+                            <div className="nhrada-msg-body">
+                                <div className="nhrada-msg-bubble nhrada-typing-bubble">
+                                    <span className="nhrada-dot" />
+                                    <span className="nhrada-dot" />
+                                    <span className="nhrada-dot" />
                                 </div>
                             </div>
                         </div>
@@ -233,21 +233,21 @@ const Chat = () => {
                 </div>
             </div>
 
-            <div className="nhraa-input-zone">
+            <div className="nhrada-input-zone">
                 {usageInfo && usageInfo.plan === 'free' && (
-                    <div className="nhraa-usage-strip">
+                    <div className="nhrada-usage-strip">
                         <div
-                            className="nhraa-usage-bar"
+                            className="nhrada-usage-bar"
                             style={{ width: `${Math.min(100, (usageInfo.used / usageInfo.limit) * 100)}%` }}
                         />
                         <span>{usageInfo.used} of {usageInfo.limit} free requests used this month</span>
                     </div>
                 )}
-                <div className="nhraa-input-row">
-                    <div className={`nhraa-input-wrap${overLimit ? ' nhraa-input-wrap--over' : ''}`}>
+                <div className="nhrada-input-row">
+                    <div className={`nhrada-input-wrap${overLimit ? ' nhrada-input-wrap--over' : ''}`}>
                         <textarea
                             ref={inputRef}
-                            className="nhraa-textarea"
+                            className="nhrada-textarea"
                             placeholder="E.g., Make my header sticky when scrolling…"
                             value={input}
                             onChange={e => setInput(e.target.value)}
@@ -256,25 +256,25 @@ const Chat = () => {
                             disabled={loading}
                         />
                         {charCount > MAX_CHARS * 0.8 && (
-                            <span className={`nhraa-counter${overLimit ? ' nhraa-counter--over' : ''}`}>
+                            <span className={`nhrada-counter${overLimit ? ' nhrada-counter--over' : ''}`}>
                                 {charCount}/{MAX_CHARS}
                             </span>
                         )}
                     </div>
                     <button
-                        className={`nhraa-send-btn${canSend ? ' nhraa-send-btn--active' : ''}`}
+                        className={`nhrada-send-btn${canSend ? ' nhrada-send-btn--active' : ''}`}
                         onClick={sendMessage}
                         disabled={!canSend}
                         aria-label="Send message"
                     >
                         {loading ? (
-                            <span className="nhraa-send-spinner" />
+                            <span className="nhrada-send-spinner" />
                         ) : (
                             <SendIcon />
                         )}
                     </button>
                 </div>
-                <p className="nhraa-input-hint">Enter to send · Shift+Enter for new line</p>
+                <p className="nhrada-input-hint">Enter to send · Shift+Enter for new line</p>
             </div>
         </div>
     );

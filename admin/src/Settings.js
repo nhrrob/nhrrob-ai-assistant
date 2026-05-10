@@ -2,21 +2,21 @@ import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 
 const Field = ({ label, description, children }) => (
-    <div className="nhraa-field">
-        <label className="nhraa-field-label">{label}</label>
-        {description && <p className="nhraa-field-desc">{description}</p>}
-        <div className="nhraa-field-control">{children}</div>
+    <div className="nhrada-field">
+        <label className="nhrada-field-label">{label}</label>
+        {description && <p className="nhrada-field-desc">{description}</p>}
+        <div className="nhrada-field-control">{children}</div>
     </div>
 );
 
 const Settings = () => {
     const [settings, setSettings] = useState({
-        nhraa_licence_key: '',
-        nhraa_ai_provider: 'claude',
-        nhraa_claude_api_key: '',
-        nhraa_openai_api_key: '',
-        nhraa_gemini_api_key: '',
-        nhraa_debug_mode: false,
+        nhrada_licence_key: '',
+        nhrada_ai_provider: 'claude',
+        nhrada_claude_api_key: '',
+        nhrada_openai_api_key: '',
+        nhrada_gemini_api_key: '',
+        nhrada_debug_mode: false,
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -26,15 +26,15 @@ const Settings = () => {
     const toggleKey = (p) => setShowKey(prev => ({ ...prev, [p]: !prev[p] }));
 
     useEffect(() => {
-        apiFetch({ path: '/nhraa/v1/settings' })
+        apiFetch({ path: '/nhrada/v1/settings' })
             .then(res => {
                 setSettings({
-                    nhraa_licence_key: res.nhraa_licence_key || '',
-                    nhraa_ai_provider: res.nhraa_ai_provider || 'claude',
-                    nhraa_claude_api_key: res.nhraa_claude_api_key || '',
-                    nhraa_openai_api_key: res.nhraa_openai_api_key || '',
-                    nhraa_gemini_api_key: res.nhraa_gemini_api_key || '',
-                    nhraa_debug_mode: !!res.nhraa_debug_mode,
+                    nhrada_licence_key: res.nhrada_licence_key || '',
+                    nhrada_ai_provider: res.nhrada_ai_provider || 'claude',
+                    nhrada_claude_api_key: res.nhrada_claude_api_key || '',
+                    nhrada_openai_api_key: res.nhrada_openai_api_key || '',
+                    nhrada_gemini_api_key: res.nhrada_gemini_api_key || '',
+                    nhrada_debug_mode: !!res.nhrada_debug_mode,
                 });
                 setLoading(false);
             })
@@ -50,7 +50,7 @@ const Settings = () => {
         e.preventDefault();
         setSaving(true);
         apiFetch({
-            path: '/nhraa/v1/settings',
+            path: '/nhrada/v1/settings',
             method: 'POST',
             data: settings,
         }).then(() => {
@@ -66,7 +66,7 @@ const Settings = () => {
         if (!window.confirm('Clear all chat messages? This cannot be undone.')) return;
         setClearing(true);
         apiFetch({
-            path: '/nhraa/v1/clear-history',
+            path: '/nhrada/v1/clear-history',
             method: 'POST',
         }).then(() => {
             setClearing(false);
@@ -81,32 +81,32 @@ const Settings = () => {
 
     if (loading) {
         return (
-            <div className="nhraa-panel">
-                <div className="nhraa-loading-rows">
-                    {[1, 2, 3].map(i => <div key={i} className="nhraa-skeleton-row" />)}
+            <div className="nhrada-panel">
+                <div className="nhrada-loading-rows">
+                    {[1, 2, 3].map(i => <div key={i} className="nhrada-skeleton-row" />)}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="nhraa-panel">
-            <div className="nhraa-panel-header">
+        <div className="nhrada-panel">
+            <div className="nhrada-panel-header">
                 <div>
-                    <h1 className="nhraa-panel-title">Settings</h1>
-                    <p className="nhraa-panel-desc">Configure your AI Developer Assistant.</p>
+                    <h1 className="nhrada-panel-title">Settings</h1>
+                    <p className="nhrada-panel-desc">Configure your AI Developer Assistant.</p>
                 </div>
             </div>
 
             {notice && (
-                <div className={`nhraa-notice nhraa-notice--${notice.type}`}>
+                <div className={`nhrada-notice nhrada-notice--${notice.type}`}>
                     {notice.text}
                 </div>
             )}
 
             <form onSubmit={handleSave}>
-                <div className="nhraa-settings-section">
-                    <h2 className="nhraa-section-title">Licence & API</h2>
+                <div className="nhrada-settings-section">
+                    <h2 className="nhrada-section-title">Licence & API</h2>
 
                     <Field
                         label="Pro Licence Key"
@@ -114,9 +114,9 @@ const Settings = () => {
                     >
                         <input
                             type="text"
-                            className="nhraa-input-text"
-                            value={settings.nhraa_licence_key}
-                            onChange={e => set('nhraa_licence_key', e.target.value)}
+                            className="nhrada-input-text"
+                            value={settings.nhrada_licence_key}
+                            onChange={e => set('nhrada_licence_key', e.target.value)}
                             placeholder="XXXX-XXXX-XXXX-XXXX"
                             autoComplete="off"
                         />
@@ -127,9 +127,9 @@ const Settings = () => {
                         description="Choose which AI service powers the assistant. Select a provider then enter its API key below."
                     >
                         <select
-                            className="nhraa-input-text"
-                            value={settings.nhraa_ai_provider}
-                            onChange={e => set('nhraa_ai_provider', e.target.value)}
+                            className="nhrada-input-text"
+                            value={settings.nhrada_ai_provider}
+                            onChange={e => set('nhrada_ai_provider', e.target.value)}
                         >
                             <option value="claude">Claude (Anthropic) — paid</option>
                             <option value="openai">ChatGPT (OpenAI) — paid</option>
@@ -137,63 +137,63 @@ const Settings = () => {
                         </select>
                     </Field>
 
-                    {settings.nhraa_ai_provider === 'claude' && (
+                    {settings.nhrada_ai_provider === 'claude' && (
                         <Field
                             label="Anthropic API Key"
                             description="Get your key at console.anthropic.com → API Keys."
                         >
-                            <div className="nhraa-password-wrap">
+                            <div className="nhrada-password-wrap">
                                 <input
                                     type={showKey.claude ? 'text' : 'password'}
-                                    className="nhraa-input-text"
-                                    value={settings.nhraa_claude_api_key}
-                                    onChange={e => set('nhraa_claude_api_key', e.target.value)}
+                                    className="nhrada-input-text"
+                                    value={settings.nhrada_claude_api_key}
+                                    onChange={e => set('nhrada_claude_api_key', e.target.value)}
                                     placeholder="sk-ant-api03-…"
                                     autoComplete="new-password"
                                 />
-                                <button type="button" className="nhraa-toggle-key" onClick={() => toggleKey('claude')}>
+                                <button type="button" className="nhrada-toggle-key" onClick={() => toggleKey('claude')}>
                                     {showKey.claude ? 'Hide' : 'Show'}
                                 </button>
                             </div>
                         </Field>
                     )}
 
-                    {settings.nhraa_ai_provider === 'openai' && (
+                    {settings.nhrada_ai_provider === 'openai' && (
                         <Field
                             label="OpenAI API Key"
                             description="Get your key at platform.openai.com → API Keys. Uses gpt-4o-mini (low cost)."
                         >
-                            <div className="nhraa-password-wrap">
+                            <div className="nhrada-password-wrap">
                                 <input
                                     type={showKey.openai ? 'text' : 'password'}
-                                    className="nhraa-input-text"
-                                    value={settings.nhraa_openai_api_key}
-                                    onChange={e => set('nhraa_openai_api_key', e.target.value)}
+                                    className="nhrada-input-text"
+                                    value={settings.nhrada_openai_api_key}
+                                    onChange={e => set('nhrada_openai_api_key', e.target.value)}
                                     placeholder="sk-…"
                                     autoComplete="new-password"
                                 />
-                                <button type="button" className="nhraa-toggle-key" onClick={() => toggleKey('openai')}>
+                                <button type="button" className="nhrada-toggle-key" onClick={() => toggleKey('openai')}>
                                     {showKey.openai ? 'Hide' : 'Show'}
                                 </button>
                             </div>
                         </Field>
                     )}
 
-                    {settings.nhraa_ai_provider === 'gemini' && (
+                    {settings.nhrada_ai_provider === 'gemini' && (
                         <Field
                             label="Google Gemini API Key"
                             description="Get your free key at aistudio.google.com → Get API Key. Uses gemini-2.0-flash (free tier)."
                         >
-                            <div className="nhraa-password-wrap">
+                            <div className="nhrada-password-wrap">
                                 <input
                                     type={showKey.gemini ? 'text' : 'password'}
-                                    className="nhraa-input-text"
-                                    value={settings.nhraa_gemini_api_key}
-                                    onChange={e => set('nhraa_gemini_api_key', e.target.value)}
+                                    className="nhrada-input-text"
+                                    value={settings.nhrada_gemini_api_key}
+                                    onChange={e => set('nhrada_gemini_api_key', e.target.value)}
                                     placeholder="AIza…"
                                     autoComplete="new-password"
                                 />
-                                <button type="button" className="nhraa-toggle-key" onClick={() => toggleKey('gemini')}>
+                                <button type="button" className="nhrada-toggle-key" onClick={() => toggleKey('gemini')}>
                                     {showKey.gemini ? 'Hide' : 'Show'}
                                 </button>
                             </div>
@@ -201,39 +201,39 @@ const Settings = () => {
                     )}
                 </div>
 
-                <div className="nhraa-settings-section">
-                    <h2 className="nhraa-section-title">Developer Options</h2>
+                <div className="nhrada-settings-section">
+                    <h2 className="nhrada-section-title">Developer Options</h2>
 
                     <Field label="Debug Mode" description="Enable additional logging in the PHP error log for troubleshooting.">
-                        <label className="nhraa-toggle">
+                        <label className="nhrada-toggle">
                             <input
                                 type="checkbox"
-                                checked={settings.nhraa_debug_mode}
-                                onChange={e => set('nhraa_debug_mode', e.target.checked)}
+                                checked={settings.nhrada_debug_mode}
+                                onChange={e => set('nhrada_debug_mode', e.target.checked)}
                             />
-                            <span className="nhraa-toggle-track" />
-                            <span className="nhraa-toggle-label">{settings.nhraa_debug_mode ? 'Enabled' : 'Disabled'}</span>
+                            <span className="nhrada-toggle-track" />
+                            <span className="nhrada-toggle-label">{settings.nhrada_debug_mode ? 'Enabled' : 'Disabled'}</span>
                         </label>
                     </Field>
                 </div>
 
-                <div className="nhraa-settings-actions">
-                    <button type="submit" className="nhraa-btn-primary" disabled={saving}>
+                <div className="nhrada-settings-actions">
+                    <button type="submit" className="nhrada-btn-primary" disabled={saving}>
                         {saving ? 'Saving…' : 'Save Settings'}
                     </button>
                 </div>
             </form>
 
-            <div className="nhraa-settings-section nhraa-settings-section--danger">
-                <h2 className="nhraa-section-title nhraa-section-title--danger">Danger Zone</h2>
-                <div className="nhraa-danger-row">
+            <div className="nhrada-settings-section nhrada-settings-section--danger">
+                <h2 className="nhrada-section-title nhrada-section-title--danger">Danger Zone</h2>
+                <div className="nhrada-danger-row">
                     <div>
                         <strong>Clear Chat History</strong>
                         <p>Permanently delete all chat messages. Applied changes are not affected.</p>
                     </div>
                     <button
                         type="button"
-                        className="nhraa-btn-danger"
+                        className="nhrada-btn-danger"
                         onClick={handleClearHistory}
                         disabled={clearing}
                     >
@@ -242,10 +242,10 @@ const Settings = () => {
                 </div>
             </div>
 
-            <div className="nhraa-settings-section">
-                <h2 className="nhraa-section-title">About</h2>
-                <div className="nhraa-about-grid">
-                    <div className="nhraa-about-card">
+            <div className="nhrada-settings-section">
+                <h2 className="nhrada-section-title">About</h2>
+                <div className="nhrada-about-grid">
+                    <div className="nhrada-about-card">
                         <strong>Free Plan</strong>
                         <ul>
                             <li>10 AI requests / month</li>
@@ -253,7 +253,7 @@ const Settings = () => {
                             <li>Undo any change</li>
                         </ul>
                     </div>
-                    <div className="nhraa-about-card nhraa-about-card--pro">
+                    <div className="nhrada-about-card nhrada-about-card--pro">
                         <strong>Pro Plan — $9/mo</strong>
                         <ul>
                             <li>Unlimited requests</li>
@@ -262,7 +262,7 @@ const Settings = () => {
                             <li>Bring your own API key</li>
                             <li>Priority support</li>
                         </ul>
-                        <a href="#" className="nhraa-btn-primary nhraa-btn-sm">Upgrade Now</a>
+                        <a href="#" className="nhrada-btn-primary nhrada-btn-sm">Upgrade Now</a>
                     </div>
                 </div>
             </div>

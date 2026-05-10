@@ -1,5 +1,5 @@
 <?php
-namespace NHR\AIAssistant;
+namespace NHR\AIDeveloperAssistant;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -18,20 +18,20 @@ class AiClient {
      * @param array  $conversation_history  Previous messages [['role'=>'user','content'=>'...'], ...]
      */
     public function send_request( $user_message, $context, $conversation_history = array() ) {
-        $provider = get_option( 'nhraa_ai_provider', 'claude' );
+        $provider = get_option( 'nhrada_ai_provider', 'claude' );
 
         if ( 'openai' === $provider ) {
-            $api_key = get_option( 'nhraa_openai_api_key' );
+            $api_key = get_option( 'nhrada_openai_api_key' );
             if ( ! empty( $api_key ) ) {
                 return $this->call_openai( $api_key, $user_message, $context, $conversation_history );
             }
         } elseif ( 'gemini' === $provider ) {
-            $api_key = get_option( 'nhraa_gemini_api_key' );
+            $api_key = get_option( 'nhrada_gemini_api_key' );
             if ( ! empty( $api_key ) ) {
                 return $this->call_gemini( $api_key, $user_message, $context, $conversation_history );
             }
         } else {
-            $api_key = get_option( 'nhraa_claude_api_key' );
+            $api_key = get_option( 'nhrada_claude_api_key' );
             if ( ! empty( $api_key ) ) {
                 return $this->call_anthropic( $api_key, $user_message, $context, $conversation_history );
             }
@@ -208,7 +208,7 @@ class AiClient {
         $response = wp_remote_post( self::BACKEND_URL, array(
             'headers' => array(
                 'Content-Type'  => 'application/json',
-                'X-Licence-Key' => get_option( 'nhraa_licence_key', '' ),
+                'X-Licence-Key' => get_option( 'nhrada_licence_key', '' ),
                 'X-Site-URL'    => get_site_url(),
             ),
             'body'    => wp_json_encode( $body ),
@@ -355,7 +355,7 @@ If the request would require any of the above, set can_do to false and explain i
     }
 
     private function maybe_debug_log( $message ) {
-        if ( get_option( 'nhraa_debug_mode' ) ) {
+        if ( get_option( 'nhrada_debug_mode' ) ) {
             error_log( '[NHRAA] ' . $message );
         }
     }

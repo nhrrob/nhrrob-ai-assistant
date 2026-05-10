@@ -1,7 +1,7 @@
 <?php
-namespace NHR\AIAssistant;
+namespace NHR\AIDeveloperAssistant;
 
-use NHR\AIAssistant\Database\Changelog;
+use NHR\AIDeveloperAssistant\Database\Changelog;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -69,11 +69,11 @@ class Executor {
     }
 
     private function apply_js_change( $change_id, $code ) {
-        $original_value = get_option( 'nhraa_custom_js', '' );
+        $original_value = get_option( 'nhrada_custom_js', '' );
         $new_value = $original_value . "\n" . $code;
 
-        $this->changelog->create_snapshot( $change_id, 'option', 'nhraa_custom_js', $original_value, $new_value );
-        update_option( 'nhraa_custom_js', $new_value );
+        $this->changelog->create_snapshot( $change_id, 'option', 'nhrada_custom_js', $original_value, $new_value );
+        update_option( 'nhrada_custom_js', $new_value );
         return true;
     }
 

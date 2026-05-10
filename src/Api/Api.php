@@ -1,11 +1,11 @@
 <?php
-namespace NHR\AIAssistant\Api;
+namespace NHR\AIDeveloperAssistant\Api;
 
-use NHR\AIAssistant\Context;
-use NHR\AIAssistant\AiClient;
-use NHR\AIAssistant\Executor;
-use NHR\AIAssistant\Undo;
-use NHR\AIAssistant\Licence;
+use NHR\AIDeveloperAssistant\Context;
+use NHR\AIDeveloperAssistant\AiClient;
+use NHR\AIDeveloperAssistant\Executor;
+use NHR\AIDeveloperAssistant\Undo;
+use NHR\AIDeveloperAssistant\Licence;
 use WP_REST_Request;
 use WP_Error;
 
@@ -20,7 +20,7 @@ class Api {
     }
 
     public function register_routes() {
-        $ns = 'nhraa/v1';
+        $ns = 'nhrada/v1';
 
         register_rest_route( $ns, '/messages', array(
             'methods'             => 'GET',
@@ -78,7 +78,7 @@ class Api {
 
         $rows = $wpdb->get_results(
             "SELECT id, role, content, change_id, created_at
-             FROM {$wpdb->prefix}nhraa_messages
+             FROM {$wpdb->prefix}nhrada_messages
              ORDER BY id DESC
              LIMIT 50",
             ARRAY_A
@@ -119,7 +119,7 @@ class Api {
         // Enforce usage limit for free users
         if ( ! $licence->check_usage() ) {
             $current_month = gmdate( 'Y_m' );
-            $used          = (int) get_option( 'nhraa_usage_' . $current_month, 0 );
+            $used          = (int) get_option( 'nhrada_usage_' . $current_month, 0 );
             return rest_ensure_response( array(
                 'upgrade_required' => true,
                 'message'          => "You've used your {$used} free requests this month. Upgrade to Pro for unlimited requests — just \$9/month.",
@@ -129,7 +129,7 @@ class Api {
 
         // Log the user message
         $wpdb->insert(
-            $wpdb->prefix . 'nhraa_messages',
+            $wpdb->prefix . 'nhrada_messages',
             array(
                 'role'       => 'user',
                 'content'    => $message,
@@ -141,7 +141,7 @@ class Api {
         // Build conversation history for context (last 10 messages)
         $history_rows = $wpdb->get_results(
             "SELECT role, content
-             FROM {$wpdb->prefix}nhraa_messages
+             FROM {$wpdb->prefix}nhrada_messages
              ORDER BY id DESC
              LIMIT 11",
             ARRAY_A
@@ -193,7 +193,7 @@ class Api {
             $assistant_format[]          = '%d';
         }
 
-        $wpdb->insert( $wpdb->prefix . 'nhraa_messages', $assistant_data, $assistant_format );
+        $wpdb->insert( $wpdb->prefix . 'nhrada_messages', $assistant_data, $assistant_format );
 
         // Increment usage for successful responses (skip 'none' type — informational only)
         $change_type = isset( $ai_response['change_type'] ) ? $ai_response['change_type'] : 'none';
@@ -244,7 +244,7 @@ class Api {
     public function get_history( WP_REST_Request $request ) {
         global $wpdb;
         $results = $wpdb->get_results(
-            "SELECT * FROM {$wpdb->prefix}nhraa_changes ORDER BY created_at DESC LIMIT 100",
+            "SELECT * FROM {$wpdb->prefix}nhrada_changes ORDER BY created_at DESC LIMIT 100",
             ARRAY_A
         );
         return rest_ensure_response( $results );
@@ -255,12 +255,12 @@ class Api {
      */
     public function get_settings( WP_REST_Request $request ) {
         return rest_ensure_response( array(
-            'nhraa_licence_key'    => get_option( 'nhraa_licence_key', '' ),
-            'nhraa_ai_provider'    => get_option( 'nhraa_ai_provider', 'claude' ),
-            'nhraa_claude_api_key' => get_option( 'nhraa_claude_api_key', '' ) ? '***' : '',
-            'nhraa_openai_api_key' => get_option( 'nhraa_openai_api_key', '' ) ? '***' : '',
-            'nhraa_gemini_api_key' => get_option( 'nhraa_gemini_api_key', '' ) ? '***' : '',
-            'nhraa_debug_mode'     => (bool) get_option( 'nhraa_debug_mode', false ),
+            'nhrada_licence_key'    => get_option( 'nhrada_licence_key', '' ),
+            'nhrada_ai_provider'    => get_option( 'nhrada_ai_provider', 'claude' ),
+            'nhrada_claude_api_key' => get_option( 'nhrada_claude_api_key', '' ) ? '***' : '',
+            'nhrada_openai_api_key' => get_option( 'nhrada_openai_api_key', '' ) ? '***' : '',
+            'nhrada_gemini_api_key' => get_option( 'nhrada_gemini_api_key', '' ) ? '***' : '',
+            'nhrada_debug_mode'     => (bool) get_option( 'nhrada_debug_mode', false ),
         ) );
     }
 
@@ -270,29 +270,29 @@ class Api {
     public function save_settings( WP_REST_Request $request ) {
         $params = $request->get_json_params();
 
-        if ( isset( $params['nhraa_licence_key'] ) ) {
-            update_option( 'nhraa_licence_key', sanitize_text_field( $params['nhraa_licence_key'] ) );
+        if ( isset( $params['nhrada_licence_key'] ) ) {
+            update_option( 'nhrada_licence_key', sanitize_text_field( $params['nhrada_licence_key'] ) );
         }
 
         $allowed_providers = array( 'claude', 'openai', 'gemini' );
-        if ( isset( $params['nhraa_ai_provider'] ) && in_array( $params['nhraa_ai_provider'], $allowed_providers, true ) ) {
-            update_option( 'nhraa_ai_provider', $params['nhraa_ai_provider'] );
+        if ( isset( $params['nhrada_ai_provider'] ) && in_array( $params['nhrada_ai_provider'], $allowed_providers, true ) ) {
+            update_option( 'nhrada_ai_provider', $params['nhrada_ai_provider'] );
         }
 
-        if ( isset( $params['nhraa_claude_api_key'] ) && '***' !== $params['nhraa_claude_api_key'] ) {
-            update_option( 'nhraa_claude_api_key', sanitize_text_field( $params['nhraa_claude_api_key'] ) );
+        if ( isset( $params['nhrada_claude_api_key'] ) && '***' !== $params['nhrada_claude_api_key'] ) {
+            update_option( 'nhrada_claude_api_key', sanitize_text_field( $params['nhrada_claude_api_key'] ) );
         }
 
-        if ( isset( $params['nhraa_openai_api_key'] ) && '***' !== $params['nhraa_openai_api_key'] ) {
-            update_option( 'nhraa_openai_api_key', sanitize_text_field( $params['nhraa_openai_api_key'] ) );
+        if ( isset( $params['nhrada_openai_api_key'] ) && '***' !== $params['nhrada_openai_api_key'] ) {
+            update_option( 'nhrada_openai_api_key', sanitize_text_field( $params['nhrada_openai_api_key'] ) );
         }
 
-        if ( isset( $params['nhraa_gemini_api_key'] ) && '***' !== $params['nhraa_gemini_api_key'] ) {
-            update_option( 'nhraa_gemini_api_key', sanitize_text_field( $params['nhraa_gemini_api_key'] ) );
+        if ( isset( $params['nhrada_gemini_api_key'] ) && '***' !== $params['nhrada_gemini_api_key'] ) {
+            update_option( 'nhrada_gemini_api_key', sanitize_text_field( $params['nhrada_gemini_api_key'] ) );
         }
 
-        if ( isset( $params['nhraa_debug_mode'] ) ) {
-            update_option( 'nhraa_debug_mode', (bool) $params['nhraa_debug_mode'] );
+        if ( isset( $params['nhrada_debug_mode'] ) ) {
+            update_option( 'nhrada_debug_mode', (bool) $params['nhrada_debug_mode'] );
         }
 
         return rest_ensure_response( array( 'success' => true ) );
@@ -303,7 +303,7 @@ class Api {
      */
     public function clear_history( WP_REST_Request $request ) {
         global $wpdb;
-        $wpdb->query( "DELETE FROM {$wpdb->prefix}nhraa_messages" );
+        $wpdb->query( "DELETE FROM {$wpdb->prefix}nhrada_messages" );
         return rest_ensure_response( array( 'success' => true ) );
     }
 
@@ -321,7 +321,7 @@ class Api {
         }
 
         $current_month = gmdate( 'Y_m' );
-        $used          = (int) get_option( 'nhraa_usage_' . $current_month, 0 );
+        $used          = (int) get_option( 'nhrada_usage_' . $current_month, 0 );
 
         return array(
             'plan'  => 'free',

@@ -1,8 +1,8 @@
 <?php
-namespace NHR\AIAssistant;
+namespace NHR\AIDeveloperAssistant;
 
-use NHR\AIAssistant\Admin\Admin;
-use NHR\AIAssistant\Api\Api;
+use NHR\AIDeveloperAssistant\Admin\Admin;
+use NHR\AIDeveloperAssistant\Api\Api;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -24,7 +24,7 @@ class Plugin {
     }
 
     public function output_custom_js() {
-        $js = get_option( 'nhraa_custom_js', '' );
+        $js = get_option( 'nhrada_custom_js', '' );
         if ( ! empty( $js ) ) {
             echo "<script type='text/javascript'>\n" . $js . "\n</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput
         }

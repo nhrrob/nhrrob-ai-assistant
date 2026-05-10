@@ -1,5 +1,5 @@
 <?php
-namespace NHR\AIAssistant\Admin;
+namespace NHR\AIDeveloperAssistant\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
@@ -21,8 +21,8 @@ class Admin {
         $icon = 'data:image/svg+xml;base64,' . base64_encode( $svg );
 
         add_menu_page(
-            __( 'AI Developer', 'nhrrob-ai-assistant' ),
-            __( 'AI Developer', 'nhrrob-ai-assistant' ),
+            __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
+            __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
             'manage_options',
             'nhraa-settings',
             array( $this, 'render_app' ),
@@ -36,7 +36,7 @@ class Admin {
             return;
         }
 
-        $asset_file = NHRAA_PLUGIN_DIR . 'admin/build/index.asset.php';
+        $asset_file = NHRADA_PLUGIN_DIR . 'admin/build/index.asset.php';
         if ( ! file_exists( $asset_file ) ) {
             return;
         }
@@ -45,7 +45,7 @@ class Admin {
 
         wp_enqueue_script(
             'nhraa-app',
-            NHRAA_PLUGIN_URL . 'admin/build/index.js',
+            NHRADA_PLUGIN_URL . 'admin/build/index.js',
             $assets['dependencies'],
             $assets['version'],
             true
@@ -53,7 +53,7 @@ class Admin {
 
         wp_enqueue_style(
             'nhraa-app-css',
-            NHRAA_PLUGIN_URL . 'admin/build/style-index.css',
+            NHRADA_PLUGIN_URL . 'admin/build/style-index.css',
             array(),
             $assets['version']
         );
@@ -64,11 +64,11 @@ class Admin {
     }
 
     public function plugin_action_links( $links, $file ) {
-        if ( plugin_basename( NHRAA_PLUGIN_DIR . 'nhrrob-ai-assistant.php' ) === $file ) {
+        if ( plugin_basename( NHRADA_PLUGIN_DIR . 'nhrrob-ai-developer-assistant.php' ) === $file ) {
             $settings_link = sprintf(
                 '<a href="%s">%s</a>',
                 admin_url( 'admin.php?page=nhraa-settings' ),
-                __( 'Open', 'nhrrob-ai-assistant' )
+                __( 'Open', 'nhrrob-ai-developer-assistant' )
             );
             array_unshift( $links, $settings_link );
         }

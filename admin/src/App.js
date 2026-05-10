@@ -47,31 +47,31 @@ const App = () => {
     const [activeTab, setActiveTab] = useState('chat');
 
     return (
-        <div className="nhraa-app">
-            <header className="nhraa-app-header">
-                <div className="nhraa-brand">
-                    <span className="nhraa-brand-icon"><CodeIcon /></span>
-                    <span className="nhraa-brand-name">AI Developer Assistant</span>
-                    <span className="nhraa-brand-badge">Beta</span>
+        <div className="nhrada-app">
+            <header className="nhrada-app-header">
+                <div className="nhrada-brand">
+                    <span className="nhrada-brand-icon"><CodeIcon /></span>
+                    <span className="nhrada-brand-name">AI Developer Assistant</span>
+                    <span className="nhrada-brand-badge">Beta</span>
                 </div>
 
-                <nav className="nhraa-tab-nav" role="tablist">
+                <nav className="nhrada-tab-nav" role="tablist">
                     {TABS.map(tab => (
                         <button
                             key={tab.id}
                             role="tab"
                             aria-selected={activeTab === tab.id}
-                            className={`nhraa-tab-btn${activeTab === tab.id ? ' nhraa-tab-btn--active' : ''}`}
+                            className={`nhrada-tab-btn${activeTab === tab.id ? ' nhrada-tab-btn--active' : ''}`}
                             onClick={() => setActiveTab(tab.id)}
                         >
-                            <span className="nhraa-tab-icon">{tab.icon}</span>
+                            <span className="nhrada-tab-icon">{tab.icon}</span>
                             {tab.label}
                         </button>
                     ))}
                 </nav>
 
-                <div className="nhraa-header-end">
-                    <button className="nhraa-pro-pill">
+                <div className="nhrada-header-end">
+                    <button className="nhrada-pro-pill">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                         </svg>
@@ -80,7 +80,7 @@ const App = () => {
                 </div>
             </header>
 
-            <main className="nhraa-app-main" role="tabpanel">
+            <main className="nhrada-app-main" role="tabpanel">
                 {activeTab === 'chat' && <Chat />}
                 {activeTab === 'history' && <History />}
                 {activeTab === 'settings' && <Settings />}

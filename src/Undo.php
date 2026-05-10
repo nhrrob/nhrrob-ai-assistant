@@ -1,5 +1,5 @@
 <?php
-namespace NHR\AIAssistant;
+namespace NHR\AIDeveloperAssistant;
 
 use WP_Error;
 
@@ -14,7 +14,7 @@ class Undo {
 
         // Verify change exists and is applied
         $change = $wpdb->get_row( $wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}nhraa_changes WHERE id = %d AND status = 'applied'",
+            "SELECT * FROM {$wpdb->prefix}nhrada_changes WHERE id = %d AND status = 'applied'",
             $change_id
         ) );
 
@@ -24,7 +24,7 @@ class Undo {
 
         // Get snapshot
         $snapshot = $wpdb->get_row( $wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}nhraa_snapshots WHERE change_id = %d",
+            "SELECT * FROM {$wpdb->prefix}nhrada_snapshots WHERE change_id = %d",
             $change_id
         ) );
 
@@ -46,7 +46,7 @@ class Undo {
 
         if ( $success ) {
             $wpdb->update(
-                $wpdb->prefix . 'nhraa_changes',
+                $wpdb->prefix . 'nhrada_changes',
                 array( 'status' => 'undone' ),
                 array( 'id' => $change_id ),
                 array( '%s' ),
