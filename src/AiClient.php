@@ -7,114 +7,165 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AiClient {
 
-    private $backend_url = 'https://mock-backend.test/api/chat'; // Fallback to SaaS proxy if no direct key
-    
-    public function send_request( $user_message, $context ) {
-        // Direct integration if API key is provided
+    const MODEL = 'claude-sonnet-4-5-20251001';
+    const BACKEND_URL = 'https://your-backend.com/api/chat';
+
+    /**
+     * @param string $user_message
+     * @param array  $context
+     * @param array  $conversation_history  Previous messages [['role'=>'user','content'=>'...'], ...]
+     */
+    public function send_request( $user_message, $context, $conversation_history = array() ) {
         $api_key = get_option( 'nhraa_claude_api_key' );
-        
+
         if ( ! empty( $api_key ) ) {
-            return $this->call_anthropic_api( $api_key, $user_message, $context );
+            return $this->call_anthropic( $api_key, $user_message, $context, $conversation_history );
         }
 
-        // ... existing fallback to backend logic
-        $messages = array(
-            array(
-                'role' => 'user',
-                'content' => $user_message
-            )
-        );
-
-        $body = array(
-            'messages'     => $messages,
-            'context'      => $context,
-            'user_message' => $user_message
-        );
-
-        $response = wp_remote_post( $this->backend_url, array(
-            'headers' => array(
-                'Content-Type'  => 'application/json',
-                'X-Licence-Key' => get_option( 'nhraa_licence_key', '' ),
-                'X-Site-URL'    => get_site_url()
-            ),
-            'body'    => wp_json_encode( $body ),
-            'timeout' => 30
-        ) );
-
-        if ( is_wp_error( $response ) ) {
-            return array( 'error' => $response->get_error_message() );
-        }
-
-        $status_code = wp_remote_retrieve_response_code( $response );
-        $body_raw    = wp_remote_retrieve_body( $response );
-        $data        = json_decode( $body_raw, true );
-
-        if ( $status_code !== 200 ) {
-            return array( 'error' => isset($data['message']) ? $data['message'] : 'Backend error' );
-        }
-
-        return isset($data['response']) ? $data['response'] : array('error' => 'Invalid response format');
+        return $this->call_backend( $user_message, $context, $conversation_history );
     }
 
-    private function call_anthropic_api( $api_key, $user_message, $context ) {
+    /**
+     * Call the Anthropic API directly (Bring Your Own Key).
+     */
+    private function call_anthropic( $api_key, $user_message, $context, $history ) {
         $system_prompt = $this->build_system_prompt( $context );
 
+        // Build messages array with history + current message
+        $messages = array();
+        foreach ( $history as $h ) {
+            if ( in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
+                $messages[] = array(
+                    'role'    => $h['role'],
+                    'content' => $h['content'],
+                );
+            }
+        }
+        $messages[] = array(
+            'role'    => 'user',
+            'content' => $user_message,
+        );
+
         $body = array(
-            'model'      => 'claude-3-7-sonnet-20250219',
+            'model'      => self::MODEL,
             'max_tokens' => 4000,
             'system'     => $system_prompt,
-            'messages'   => array(
-                array(
-                    'role'    => 'user',
-                    'content' => $user_message
-                )
-            )
+            'messages'   => $messages,
         );
 
         $response = wp_remote_post( 'https://api.anthropic.com/v1/messages', array(
             'headers' => array(
                 'x-api-key'         => $api_key,
                 'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json'
+                'content-type'      => 'application/json',
             ),
             'body'    => wp_json_encode( $body ),
-            'timeout' => 60
+            'timeout' => 60,
         ) );
 
         if ( is_wp_error( $response ) ) {
-            return array( 'error' => 'API Error: ' . $response->get_error_message() );
+            return array( 'error' => 'API connection error: ' . $response->get_error_message() );
         }
 
-        $status_code = wp_remote_retrieve_response_code( $response );
-        $body_raw    = wp_remote_retrieve_body( $response );
-        $data        = json_decode( $body_raw, true );
+        $status   = wp_remote_retrieve_response_code( $response );
+        $raw_body = wp_remote_retrieve_body( $response );
+        $data     = json_decode( $raw_body, true );
 
-        if ( $status_code !== 200 ) {
-            $err_msg = isset($data['error']['message']) ? $data['error']['message'] : 'Unknown Claude API Error';
-            return array( 'error' => $err_msg );
+        if ( $status !== 200 ) {
+            $err = isset( $data['error']['message'] ) ? $data['error']['message'] : 'Unknown Claude API error';
+            $this->maybe_debug_log( 'Claude API error (' . $status . '): ' . $err );
+            return array( 'error' => $err );
         }
 
-        if ( isset($data['content'][0]['text']) ) {
-            $json_str = $data['content'][0]['text'];
-            
-            // Clean up possible markdown wrappers
-            $json_str = preg_replace('/```json\s*/i', '', $json_str);
-            $json_str = preg_replace('/```\s*$/i', '', $json_str);
-            $json_str = trim($json_str);
+        return $this->parse_response( $data );
+    }
 
-            $parsed = json_decode($json_str, true);
-            if ( json_last_error() === JSON_ERROR_NONE ) {
-                return $parsed;
-            } else {
-                return array( 'error' => 'Claude returned invalid JSON: ' . json_last_error_msg() );
+    /**
+     * Call the SaaS proxy backend (licence-based flow).
+     */
+    private function call_backend( $user_message, $context, $history ) {
+        $messages = array();
+        foreach ( $history as $h ) {
+            $messages[] = array(
+                'role'    => $h['role'],
+                'content' => $h['content'],
+            );
+        }
+
+        $body = array(
+            'messages'     => $messages,
+            'context'      => $context,
+            'user_message' => $user_message,
+        );
+
+        $response = wp_remote_post( self::BACKEND_URL, array(
+            'headers' => array(
+                'Content-Type'  => 'application/json',
+                'X-Licence-Key' => get_option( 'nhraa_licence_key', '' ),
+                'X-Site-URL'    => get_site_url(),
+            ),
+            'body'    => wp_json_encode( $body ),
+            'timeout' => 45,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return array( 'error' => 'Backend connection error: ' . $response->get_error_message() );
+        }
+
+        $status   = wp_remote_retrieve_response_code( $response );
+        $raw_body = wp_remote_retrieve_body( $response );
+        $data     = json_decode( $raw_body, true );
+
+        if ( $status !== 200 ) {
+            $err = isset( $data['message'] ) ? $data['message'] : 'Backend error (HTTP ' . $status . ')';
+            return array( 'error' => $err );
+        }
+
+        return isset( $data['response'] )
+            ? $data['response']
+            : array( 'error' => 'Invalid backend response format.' );
+    }
+
+    /**
+     * Parse Claude API response into the AI response array.
+     */
+    private function parse_response( $data ) {
+        if ( ! isset( $data['content'][0]['text'] ) ) {
+            return array( 'error' => 'Unexpected Claude response format.' );
+        }
+
+        $text = $data['content'][0]['text'];
+
+        // Strip markdown code fences if present
+        $text = preg_replace( '/^```(?:json)?\s*/im', '', $text );
+        $text = preg_replace( '/\s*```\s*$/im', '', $text );
+        $text = trim( $text );
+
+        // Extract first JSON object if there's extra text
+        if ( '{' !== substr( $text, 0, 1 ) ) {
+            if ( preg_match( '/\{.*\}/s', $text, $m ) ) {
+                $text = $m[0];
             }
         }
 
-        return array( 'error' => 'Unexpected Claude response format' );
+        $parsed = json_decode( $text, true );
+
+        if ( JSON_ERROR_NONE !== json_last_error() ) {
+            $this->maybe_debug_log( 'JSON parse error: ' . json_last_error_msg() . ' | Raw: ' . substr( $text, 0, 500 ) );
+            return array( 'error' => 'Could not parse AI response. Please try again.' );
+        }
+
+        return $parsed;
     }
 
+    /**
+     * Build the system prompt with site context injected.
+     */
     private function build_system_prompt( $context ) {
-        $date = gmdate('Y-m-d');
+        $date         = gmdate( 'Y-m-d' );
+        $plugin_list  = isset( $context['plugin_list'] ) ? $context['plugin_list'] : 'unknown';
+        $error_log    = isset( $context['error_log'] ) ? $context['error_log'] : 'N/A';
+
         return "You are an expert WordPress developer embedded as an AI assistant inside a WordPress admin panel. You help non-technical site owners implement changes to their website using plain English.
 
 ## Site context
@@ -122,9 +173,10 @@ WordPress version: {$context['wp_version']}
 PHP version: {$context['php_version']}
 Active theme: {$context['theme_name']} ({$context['theme_version']})
 Child theme: {$context['child_theme']}
-Active plugins: {$context['plugin_list']}
+Active plugins: {$plugin_list}
 WooCommerce active: {$context['woocommerce']}
-Recent PHP errors: {$context['error_log']}
+Recent PHP errors: {$error_log}
+Today's date: {$date}
 
 ## How to respond
 
@@ -144,56 +196,62 @@ Always return valid JSON in this exact structure. No text outside the JSON.
 ## Field definitions
 
 can_do: true if you can implement this, false if you cannot or should not.
-change_type: 
-  - \"css\" = add/change styles (goes into custom CSS)
-  - \"js\" = JavaScript (enqueued in footer)
-  - \"php\" = PHP snippet (goes into managed snippets file)
-  - \"option\" = WordPress option update
-  - \"none\" = answering a question, no code change
-file_target: 
+change_type:
+  - \"css\" = add/change styles (goes into WordPress custom CSS)
+  - \"js\" = JavaScript snippet (output in footer)
+  - \"php\" = PHP snippet (goes into managed snippets file at /wp-content/nhraa-snippets.php)
+  - \"option\" = WordPress option update via update_option()
+  - \"none\" = answering a question or diagnosing without making a change
+file_target:
   - For css: \"custom-css\"
-  - For js: \"custom-js\"  
+  - For js: \"custom-js\"
   - For php: \"functions-snippet\"
   - For option: the option name e.g. \"blogname\"
-code: The actual code to apply. Must be complete and ready to run.
-description: Technical summary for the change log (1-2 sentences).
-confirmation_message: What to show the user. Plain English. Start with \"Done!\" if successful.
-cannot_reason: If can_do is false, explain why in one sentence.
-warnings: Optional note about something the user should know.
+code: The complete code to apply. Must be ready to execute as-is.
+description: One or two sentence technical summary for the change log.
+confirmation_message: Friendly plain-English message for the user. Start with \"Done!\" if successful.
+cannot_reason: If can_do is false, one sentence explaining why.
+warnings: Optional note about something the user should be aware of.
 
 ## Coding standards
 
 CSS:
-- Scope selectors specifically, avoid * or body-level overrides
+- Scope selectors specifically; avoid * or broad overrides
 - Add comment: /* WP AI Developer | {$date} | {task} */
-- Use CSS variables if theme uses them
+- Prefer CSS variables if the theme uses them
 
 JavaScript:
 - Wrap in document.addEventListener('DOMContentLoaded', function() { ... })
-- Vanilla JS only, no jQuery dependency (unless site definitely has it)
+- Use vanilla JS only (no jQuery unless the site definitely has it)
 - Add comment: // WP AI Developer | {$date} | {task}
 
 PHP:
-- Always use add_action() or add_filter() hooks
-- Check function_exists() before defining functions
-- No direct database queries — use WP functions
+- Use add_action() / add_filter() hooks — never echo directly at top level
+- Wrap in if (!function_exists(...)) checks
+- No direct database queries; use WordPress functions
 - Add comment: // WP AI Developer | {$date} | {task}
 
 ## Safety rules — NEVER generate code that:
 - Touches WordPress core files
-- Calls exec(), shell_exec(), system(), passthru()
-- Makes requests to external URLs not already used by the site
-- Contains DROP, TRUNCATE, DELETE SQL
+- Calls exec(), shell_exec(), system(), passthru(), or eval()
+- Accesses external URLs not already in use by the site
+- Contains DROP, TRUNCATE, or DELETE SQL statements
 - References wp-config.php
-- Deletes posts, users, orders, or any content
-- Stores or transmits user passwords or payment data
+- Deletes posts, users, orders, or any user-created content
+- Stores or transmits passwords or payment data
 
-If the request would require any of the above, set can_do to false.
+If the request would require any of the above, set can_do to false and explain in cannot_reason.
 
 ## Tone for confirmation_message
-- Friendly and plain — like a helpful colleague, not a robot
-- Explain what was done in one sentence the owner will understand
-- Mention what they'll see/experience, not what code was written
-- If there's a caveat, mention it simply";
+- Friendly and plain — like a helpful developer colleague
+- One or two sentences explaining what the user will now see or experience
+- Never use technical jargon; translate everything to plain English
+- Always start with \"Done!\" for successful changes";
+    }
+
+    private function maybe_debug_log( $message ) {
+        if ( get_option( 'nhraa_debug_mode' ) ) {
+            error_log( '[NHRAA] ' . $message );
+        }
     }
 }

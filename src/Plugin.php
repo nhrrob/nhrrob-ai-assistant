@@ -19,15 +19,14 @@ class Plugin {
         $api = new Api();
         $api->init();
 
-        // Enqueue custom code
-        add_action( 'wp_footer', array( $this, 'enqueue_custom_js' ), 99 );
+        add_action( 'wp_footer', array( $this, 'output_custom_js' ), 99 );
         $this->load_php_snippets();
     }
 
-    public function enqueue_custom_js() {
+    public function output_custom_js() {
         $js = get_option( 'nhraa_custom_js', '' );
         if ( ! empty( $js ) ) {
-            echo "<script type='text/javascript'>\n" . $js . "\n</script>\n";
+            echo "<script type='text/javascript'>\n" . $js . "\n</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput
         }
     }
 

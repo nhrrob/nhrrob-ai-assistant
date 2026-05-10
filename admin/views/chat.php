@@ -8,15 +8,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     <button id="nhraa-chat-toggle" class="nhraa-chat-toggle" aria-label="Toggle AI Assistant">
         <span class="nhraa-ai-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12H4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M20 12H22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 2V4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 20V22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M4.93 4.93L6.34 6.34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17.66 17.66L19.07 19.07" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M19.07 4.93L17.66 6.34" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6.34 17.66L4.93 19.07" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Robotic Head Concept -->
+                <rect x="4" y="10" width="16" height="10" rx="3" stroke="white" stroke-width="2"/>
+                <path d="M9 14H9.01" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M15 14H15.01" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M10 17H14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+                <!-- Antenna / Connection -->
+                <path d="M12 10V7" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="5" r="2" fill="white"/>
             </svg>
         </span>
     </button>
@@ -27,11 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
             <div class="nhraa-header-title">
                 <span class="nhraa-header-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 11.5C21 16.7467 16.7467 21 11.5 21C6.25329 21 2 16.7467 2 11.5C2 6.25329 6.25329 2 11.5 2C16.7467 2 21 6.25329 21 11.5Z" stroke="white" stroke-width="2"/>
-                        <path d="M11.5 2V21" stroke="white" stroke-width="1.5"/>
-                        <path d="M2 11.5H21" stroke="white" stroke-width="1.5"/>
-                        <path d="M7 3C7 3 9.5 6 9.5 11.5C9.5 17 7 21 7 21" stroke="white" stroke-width="1.5"/>
-                        <path d="M16 3C16 3 13.5 6 13.5 11.5C13.5 17 16 21 16 21" stroke="white" stroke-width="1.5"/>
+                        <rect x="5" y="11" width="14" height="8" rx="2" stroke="white" stroke-width="2"/>
+                        <circle cx="12" cy="7" r="2" stroke="white" stroke-width="2"/>
                     </svg>
                 </span>
                 <div class="nhraa-header-text">
