@@ -49,6 +49,7 @@
     flex-shrink: 0;
     gap: 16px;
     z-index: 10;
+    position: relative;
 }
 
 /* Brand */
@@ -95,6 +96,9 @@
     background: var(--c-bg);
     border-radius: 8px;
     padding: 3px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .nhrada-tab-btn {

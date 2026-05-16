@@ -7,8 +7,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Admin {
 
+    private $hook;
+
     public function init() {
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'maybe_enqueue_assets' ) );
         add_filter( 'plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2 );
         add_action( 'admin_notices', array( $this, 'maybe_show_nginx_notice' ) );
         add_action( 'wp_ajax_nhrada_dismiss_nginx_notice', array( $this, 'dismiss_nginx_notice' ) );
@@ -21,20 +24,21 @@ class Admin {
         </svg>';
         $icon = 'data:image/svg+xml;base64,' . base64_encode( $svg );
 
-        $hook = add_menu_page(
+        $this->hook = add_menu_page(
             __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
             __( 'AI Developer', 'nhrrob-ai-developer-assistant' ),
             'manage_options',
-            'nhrada-settings',
+            'nhrada-assistant',
             array( $this, 'render_app' ),
             $icon,
             30
         );
-
-        add_action( 'admin_head-' . $hook, array( $this, 'enqueue_assets' ) );
     }
 
-    public function enqueue_assets() {
+    public function maybe_enqueue_assets( $hook ) {
+        if ( $hook !== $this->hook ) {
+            return;
+        }
         wp_enqueue_script( 'nhrada-app' );
         wp_enqueue_style( 'nhrada-app-css' );
     }
@@ -102,7 +106,7 @@ class Admin {
         if ( plugin_basename( NHRADA_FILE ) === $file ) {
             $settings_link = sprintf(
                 '<a href="%s">%s</a>',
-                admin_url( 'admin.php?page=nhrada-settings' ),
+                admin_url( 'admin.php?page=nhrada-assistant' ),
                 __( 'Open', 'nhrrob-ai-developer-assistant' )
             );
             array_unshift( $links, $settings_link );

@@ -19,7 +19,7 @@ class Assets
 
         return [
             'nhrada-app' => [
-                'src'     => NHRADA_URL . 'admin/build/index.js',
+                'src'     => NHRADA_URL . '/admin/build/index.js',
                 'deps'    => $asset['dependencies'],
                 'version' => $asset['version'],
             ],
@@ -32,7 +32,7 @@ class Assets
 
         return [
             'nhrada-app-css' => [
-                'src'     => NHRADA_URL . 'admin/build/style-index.css',
+                'src'     => NHRADA_URL . '/admin/build/style-index.css',
                 'version' => $asset['version'],
             ],
         ];
