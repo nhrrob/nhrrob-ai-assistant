@@ -11,17 +11,18 @@ class Changelog {
         global $wpdb;
 
         $wpdb->insert(
-            $wpdb->prefix . 'nhrada_changes',
+            $wpdb->prefix . 'nhrada_log',
             array(
+                'record_type' => 'change',
                 'request'     => $request_msg,
                 'description' => $description,
                 'change_type' => $change_type,
                 'file_target' => $file_target,
                 'code'        => $code,
+                'status'      => 'applied',
                 'created_at'  => current_time( 'mysql' ),
-                'status'      => 'applied'
             ),
-            array( '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+            array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
         );
 
         return $wpdb->insert_id;
@@ -30,19 +31,17 @@ class Changelog {
     public function create_snapshot( $change_id, $snapshot_type, $target_key, $original_value, $new_value ) {
         global $wpdb;
 
-        $wpdb->insert(
-            $wpdb->prefix . 'nhrada_snapshots',
+        $wpdb->update(
+            $wpdb->prefix . 'nhrada_log',
             array(
-                'change_id'      => $change_id,
                 'snapshot_type'  => $snapshot_type,
                 'target_key'     => $target_key,
                 'original_value' => $original_value,
                 'new_value'      => $new_value,
-                'created_at'     => current_time( 'mysql' )
             ),
-            array( '%d', '%s', '%s', '%s', '%s', '%s' )
+            array( 'id' => $change_id ),
+            array( '%s', '%s', '%s', '%s' ),
+            array( '%d' )
         );
-
-        return $wpdb->insert_id;
     }
 }

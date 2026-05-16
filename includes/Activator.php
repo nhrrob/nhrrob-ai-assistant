@@ -12,42 +12,29 @@ class Activator {
 
         $charset_collate = $wpdb->get_charset_collate();
 
-        $sql1 = "CREATE TABLE {$wpdb->prefix}nhrada_changes (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            request text NOT NULL,
-            description text NOT NULL,
-            change_type varchar(50) NOT NULL,
-            file_target varchar(255),
-            code longtext,
-            created_at datetime NOT NULL,
-            status varchar(20) DEFAULT 'applied',
-            PRIMARY KEY  (id)
-        ) $charset_collate;";
-
-        $sql2 = "CREATE TABLE {$wpdb->prefix}nhrada_snapshots (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            change_id bigint(20) unsigned NOT NULL,
-            snapshot_type varchar(20) NOT NULL,
-            target_key varchar(500) NOT NULL,
-            original_value longtext,
-            new_value longtext,
-            created_at datetime NOT NULL,
+        $sql = "CREATE TABLE {$wpdb->prefix}nhrada_log (
+            id                bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            record_type       varchar(20) NOT NULL,
+            request           text DEFAULT NULL,
+            description       text DEFAULT NULL,
+            change_type       varchar(50) DEFAULT NULL,
+            file_target       varchar(255) DEFAULT NULL,
+            code              longtext DEFAULT NULL,
+            status            varchar(20) DEFAULT NULL,
+            snapshot_type     varchar(20) DEFAULT NULL,
+            target_key        varchar(500) DEFAULT NULL,
+            original_value    longtext DEFAULT NULL,
+            new_value         longtext DEFAULT NULL,
+            role              varchar(10) DEFAULT NULL,
+            content           text DEFAULT NULL,
+            change_id         bigint(20) unsigned DEFAULT NULL,
+            created_at        datetime NOT NULL,
             PRIMARY KEY  (id),
+            KEY record_type (record_type),
             KEY change_id (change_id)
         ) $charset_collate;";
 
-        $sql3 = "CREATE TABLE {$wpdb->prefix}nhrada_messages (
-            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            role varchar(10) NOT NULL,
-            content text NOT NULL,
-            change_id bigint(20) unsigned,
-            created_at datetime NOT NULL,
-            PRIMARY KEY  (id)
-        ) $charset_collate;";
-
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-        dbDelta( $sql1 );
-        dbDelta( $sql2 );
-        dbDelta( $sql3 );
+        dbDelta( $sql );
     }
 }

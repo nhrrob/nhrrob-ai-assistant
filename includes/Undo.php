@@ -12,9 +12,8 @@ class Undo {
     public function revert_change( $change_id ) {
         global $wpdb;
 
-        // Verify change exists and is applied
         $change = $wpdb->get_row( $wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}nhrada_changes WHERE id = %d AND status = 'applied'",
+            "SELECT * FROM {$wpdb->prefix}nhrada_log WHERE id = %d AND record_type = 'change' AND status = 'applied'",
             $change_id
         ) );
 
@@ -22,22 +21,16 @@ class Undo {
             return new WP_Error( 'undo_failed', 'Change not found or already undone.' );
         }
 
-        // Get snapshot
-        $snapshot = $wpdb->get_row( $wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}nhrada_snapshots WHERE change_id = %d",
-            $change_id
-        ) );
-
-        if ( ! $snapshot ) {
+        if ( ! $change->snapshot_type ) {
             return new WP_Error( 'undo_failed', 'No snapshot found for this change.' );
         }
 
         $success = false;
 
-        if ( 'option' === $snapshot->snapshot_type ) {
-            $success = $this->revert_option( $snapshot->target_key, $snapshot->original_value );
-        } elseif ( 'file' === $snapshot->snapshot_type ) {
-            $success = $this->revert_file( $snapshot->target_key, $snapshot->original_value, $change_id );
+        if ( 'option' === $change->snapshot_type ) {
+            $success = $this->revert_option( $change->target_key, $change->original_value );
+        } elseif ( 'file' === $change->snapshot_type ) {
+            $success = $this->revert_file( $change->target_key, $change->original_value, $change_id );
         }
 
         if ( is_wp_error( $success ) ) {
@@ -46,7 +39,7 @@ class Undo {
 
         if ( $success ) {
             $wpdb->update(
-                $wpdb->prefix . 'nhrada_changes',
+                $wpdb->prefix . 'nhrada_log',
                 array( 'status' => 'undone' ),
                 array( 'id' => $change_id ),
                 array( '%s' ),
@@ -63,7 +56,7 @@ class Undo {
             wp_update_custom_css_post( $original_value );
             return true;
         }
-        
+
         update_option( $option_name, $original_value );
         return true;
     }
@@ -71,22 +64,21 @@ class Undo {
     private function revert_file( $filename, $original_value, $change_id ) {
         if ( 'nhrada-snippets.php' === $filename ) {
             $filepath = WP_CONTENT_DIR . '/' . $filename;
-            
+
             if ( ! file_exists( $filepath ) ) {
                 return new WP_Error( 'undo_failed', 'Snippets file does not exist.' );
             }
 
             $current_content = file_get_contents( $filepath );
-            
-            // Remove the block using regex
-            $pattern = '/\n\/\/ \[NHRAA-SNIPPET-' . $change_id . ' \| [^\]]+\]\n.*?\/\/ \[\/NHRAA-SNIPPET-' . $change_id . '\]\n/s';
+
+            $pattern     = '/\n\/\/ \[NHRAA-SNIPPET-' . $change_id . ' \| [^\]]+\]\n.*?\/\/ \[\/NHRAA-SNIPPET-' . $change_id . '\]\n/s';
             $new_content = preg_replace( $pattern, '', $current_content );
-            
+
             if ( $new_content !== null ) {
                 file_put_contents( $filepath, $new_content );
                 return true;
             }
-            
+
             return new WP_Error( 'undo_failed', 'Failed to parse snippets file for undo.' );
         }
 

@@ -77,7 +77,8 @@ class Api {
 
         $rows = $wpdb->get_results(
             "SELECT id, role, content, change_id, created_at
-             FROM {$wpdb->prefix}nhrada_messages
+             FROM {$wpdb->prefix}nhrada_log
+             WHERE record_type = 'message'
              ORDER BY id DESC
              LIMIT 50",
             ARRAY_A
@@ -107,19 +108,21 @@ class Api {
 
         // Log the user message
         $wpdb->insert(
-            $wpdb->prefix . 'nhrada_messages',
+            $wpdb->prefix . 'nhrada_log',
             array(
-                'role'       => 'user',
-                'content'    => $message,
-                'created_at' => current_time( 'mysql' ),
+                'record_type' => 'message',
+                'role'        => 'user',
+                'content'     => $message,
+                'created_at'  => current_time( 'mysql' ),
             ),
-            array( '%s', '%s', '%s' )
+            array( '%s', '%s', '%s', '%s' )
         );
 
         // Build conversation history for context (last 10 messages)
         $history_rows = $wpdb->get_results(
             "SELECT role, content
-             FROM {$wpdb->prefix}nhrada_messages
+             FROM {$wpdb->prefix}nhrada_log
+             WHERE record_type = 'message'
              ORDER BY id DESC
              LIMIT 11",
             ARRAY_A
@@ -160,18 +163,19 @@ class Api {
 
         // Log assistant response
         $assistant_data   = array(
-            'role'       => 'assistant',
-            'content'    => $display_msg,
-            'created_at' => current_time( 'mysql' ),
+            'record_type' => 'message',
+            'role'        => 'assistant',
+            'content'     => $display_msg,
+            'created_at'  => current_time( 'mysql' ),
         );
-        $assistant_format = array( '%s', '%s', '%s' );
+        $assistant_format = array( '%s', '%s', '%s', '%s' );
 
         if ( is_numeric( $change_id ) ) {
             $assistant_data['change_id'] = (int) $change_id;
             $assistant_format[]          = '%d';
         }
 
-        $wpdb->insert( $wpdb->prefix . 'nhrada_messages', $assistant_data, $assistant_format );
+        $wpdb->insert( $wpdb->prefix . 'nhrada_log', $assistant_data, $assistant_format );
 
         $change_type = isset( $ai_response['change_type'] ) ? $ai_response['change_type'] : 'none';
 
@@ -217,7 +221,7 @@ class Api {
     public function get_history( WP_REST_Request $request ) {
         global $wpdb;
         $results = $wpdb->get_results(
-            "SELECT * FROM {$wpdb->prefix}nhrada_changes ORDER BY created_at DESC LIMIT 100",
+            "SELECT * FROM {$wpdb->prefix}nhrada_log WHERE record_type = 'change' ORDER BY created_at DESC LIMIT 100",
             ARRAY_A
         );
         return rest_ensure_response( $results );
@@ -275,7 +279,7 @@ class Api {
      */
     public function clear_history( WP_REST_Request $request ) {
         global $wpdb;
-        $wpdb->query( "DELETE FROM {$wpdb->prefix}nhrada_messages" );
+        $wpdb->query( "DELETE FROM {$wpdb->prefix}nhrada_log WHERE record_type = 'message'" );
         return rest_ensure_response( array( 'success' => true ) );
     }
 

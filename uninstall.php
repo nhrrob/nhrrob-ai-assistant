@@ -16,9 +16,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 global $wpdb;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}nhrada_changes");
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}nhrada_snapshots");
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}nhrada_messages");
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}nhrada_log");
 // phpcs:enable
 
 // Delete options

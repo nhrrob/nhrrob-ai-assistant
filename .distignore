@@ -71,5 +71,4 @@ postcss.config.js
 admin/src
 
 # Project Specific
-wp-ai-developer-assistant-prd.md
 CLAUDE.md

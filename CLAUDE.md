@@ -65,13 +65,18 @@ Every AI call returns a parsed JSON object. The plugin relies on these exact fie
 | `php` | Appended to `wp-content/nhrada-snippets.php` with `[NHRAA-SNIPPET-{id}]` block markers | Block removed by regex |
 | `option` | `update_option($file_target, $code)` | Option snapshot |
 
-### Database Tables
+### Database Table
 
-Three tables created on activation (`Activator::activate()`):
+One table created on activation (`Activator::activate()`): `{prefix}nhrada_log`
 
-- `{prefix}nhrada_changes` — change log (request, type, code, status `applied|undone`)
-- `{prefix}nhrada_snapshots` — before/after values per change, keyed by `change_id`
-- `{prefix}nhrada_messages` — chat history (role `user|assistant`, linked to `change_id`)
+Rows are discriminated by `record_type`:
+
+| `record_type` | Populated columns | Notes |
+|---|---|---|
+| `change` | request, description, change_type, file_target, code, status, snapshot_type, target_key, original_value, new_value, created_at | Snapshot data is stored inline (1:1); `create_snapshot()` does an UPDATE on the same row |
+| `message` | role, content, change_id (nullable), created_at | `change_id` links to a `change` row in the same table |
+
+Status values for change rows: `applied`, `undone`.
 
 ### Free Plugin
 
