@@ -68,7 +68,7 @@ tests
 *.zip
 postcss.config.js
 .wordpress-org
-admin/src
+# admin/src
 
 # Project Specific
 CLAUDE.md
