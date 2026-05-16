@@ -9,7 +9,6 @@ class Admin {
 
     public function init() {
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
         add_filter( 'plugin_action_links', array( $this, 'plugin_action_links' ), 10, 2 );
     }
 
@@ -28,34 +27,6 @@ class Admin {
             array( $this, 'render_app' ),
             $icon,
             30
-        );
-    }
-
-    public function enqueue_scripts( $hook ) {
-        if ( 'toplevel_page_nhrada-settings' !== $hook ) {
-            return;
-        }
-
-        $asset_file = NHRADA_PLUGIN_DIR . 'admin/build/index.asset.php';
-        if ( ! file_exists( $asset_file ) ) {
-            return;
-        }
-
-        $assets = require $asset_file;
-
-        wp_enqueue_script(
-            'nhrada-app',
-            NHRADA_URL . 'admin/build/index.js',
-            $assets['dependencies'],
-            $assets['version'],
-            true
-        );
-
-        wp_enqueue_style(
-            'nhrada-app-css',
-            NHRADA_URL . 'admin/build/style-index.css',
-            array(),
-            $assets['version']
         );
     }
 

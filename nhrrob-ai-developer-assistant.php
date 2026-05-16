@@ -82,6 +82,8 @@ final class Nhrada_AI_Developer_Assistant
      */
     public function init_plugin()
     {
+        new \Nhrada\AIDeveloperAssistant\Assets();
+
         if (is_admin()) {
             $admin = new \Nhrada\AIDeveloperAssistant\Admin\Admin();
             $admin->init();
@@ -90,7 +92,6 @@ final class Nhrada_AI_Developer_Assistant
         $api = new \Nhrada\AIDeveloperAssistant\Api\Api();
         $api->init();
 
-        add_action('wp_footer', [$this, 'output_custom_js'], 99);
         $this->load_php_snippets();
     }
 
@@ -112,19 +113,6 @@ final class Nhrada_AI_Developer_Assistant
     public function deactivate()
     {
         // No scheduled hooks to clear
-    }
-
-    /**
-     * Output custom JS in the footer
-     *
-     * @return void
-     */
-    public function output_custom_js()
-    {
-        $js = get_option('nhrada_custom_js', '');
-        if (!empty($js)) {
-            echo "<script type='text/javascript'>\n" . $js . "\n</script>\n"; // phpcs:ignore WordPress.Security.EscapeOutput
-        }
     }
 
     /**

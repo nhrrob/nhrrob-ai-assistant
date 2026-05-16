@@ -15,7 +15,7 @@ PHP has no build step. Composer autoload is pre-generated; run `composer dump-au
 
 ### Boot Flow
 
-`nhrrob-ai-developer-assistant.php` → `Nhrada_AI_Developer_Assistant::init()` (singleton) → `plugins_loaded` → `init_plugin()` → registers `Admin` (admin only) and `Api` (always), outputs custom JS in footer, and `require_once`s `wp-content/nhrada-snippets.php` if it exists.
+`nhrrob-ai-developer-assistant.php` → `Nhrada_AI_Developer_Assistant::init()` (singleton) → `plugins_loaded` → `init_plugin()` → instantiates `Assets` (always), `Admin` (admin only), `Api` (always), then `require_once`s `wp-content/nhrada-snippets.php` if it exists. `Assets` handles both admin script enqueuing and frontend custom JS output via `wp_footer`.
 
 ### Request Flow (the core loop)
 

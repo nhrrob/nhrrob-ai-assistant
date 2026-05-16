@@ -5,10 +5,6 @@
     "build": "wp-scripts build admin/src/index.js --output-path=admin/build",
     "start": "wp-scripts start admin/src/index.js --output-path=admin/build"
   },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
   "devDependencies": {
     "@wordpress/scripts": "^26.13.0"
   }

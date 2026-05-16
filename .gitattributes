@@ -74,8 +74,8 @@ tests/                  export-ignore
 *.sql                   export-ignore
 *.tar.gz                export-ignore
 *.zip                   export-ignore
-build/                  export-ignore
 postcss.config.js       export-ignore
+admin/src/              export-ignore
 
 # Project Specific
 wp-ai-developer-assistant-prd.md export-ignore
