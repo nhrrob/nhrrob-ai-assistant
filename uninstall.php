@@ -42,3 +42,4 @@ delete_option('nhrada_gemini_model');
 delete_option('nhrada_custom_instructions');
 delete_option('nhrada_debug_mode');
 delete_option('nhrada_custom_js');
+delete_option('nhrada_nginx_notice_dismissed');
