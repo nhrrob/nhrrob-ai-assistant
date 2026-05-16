@@ -15,7 +15,7 @@ PHP has no build step. Composer autoload is pre-generated; run `composer dump-au
 
 ### Boot Flow
 
-`nhrrob-ai-developer-assistant.php` → `Nhrada_AI_Developer_Assistant::init()` (singleton) → `plugins_loaded` → `init_plugin()` → instantiates `Assets` (always), `Admin` (admin only), `Api` (always), then `require_once`s `wp-content/nhrada-snippets.php` if it exists. `Assets` registers admin scripts/styles on `admin_enqueue_scripts` and outputs frontend custom JS via `wp_footer`; actual enqueuing of the admin React app happens in `Admin` via `admin_head-{hook}`.
+`nhrrob-ai-developer-assistant.php` → `Nhrada_AI_Developer_Assistant::init()` (singleton) → `plugins_loaded` → `init_plugin()` → instantiates `Assets` (always), `Admin` (admin only), `Api` (always), then `require_once`s `wp-content/uploads/nhrada-ai-developer-assistant/snippets-cache.php` if it exists. `Assets` registers admin scripts/styles on `admin_enqueue_scripts` and outputs frontend custom JS via `wp_footer`; actual enqueuing of the admin React app happens in `Admin` via `admin_head-{hook}`.
 
 ### Request Flow (the core loop)
 
@@ -114,12 +114,29 @@ Every AI call returns a parsed JSON object. The plugin relies on these exact fie
 
 **Executor** writes the change, **Changelog** records it, **Undo** reverts it. Before writing, `Safety::validate_code()` runs a pattern blacklist on PHP snippets (exec, eval, DROP TABLE, etc.) and enforces a 5000-char limit.
 
-| `change_type` | Storage mechanism | Undo mechanism |
-|---|---|---|
-| `css` | `wp_update_custom_css_post()` | Snapshot stores full CSS; restored verbatim |
-| `js` | `nhrada_custom_js` WP option; output in footer | Option snapshot |
-| `php` | Appended to `wp-content/nhrada-snippets.php` with `[NHRAA-SNIPPET-{id}]` block markers | Block removed by regex |
-| `option` | `update_option($file_target, $code)` | Option snapshot |
+### Managed Snippets File
+
+The DB is the source of truth for PHP snippets. `wp-content/uploads/nhrada-ai-developer-assistant/snippets-cache.php` is a **compiled cache** rebuilt from the DB by `Executor::rebuild_snippets_cache()` after every apply or undo. It is loaded by `load_php_snippets()` on every request. If no snippets are active the file is deleted and `require_once` skips it cleanly.
+
+`NHRADA_SNIPPETS_DIR` and `NHRADA_SNIPPETS_FILE` constants are defined using `wp_upload_dir()['basedir']` so they respect custom upload path configuration.
+
+**Why `wp-content/uploads/`?** WordPress guarantees this directory is writable and already ships a `.htaccess` blocking direct PHP execution via HTTP. Using `eval()` (the only alternative to a file) is banned by the WP.org plugin review team.
+
+**Why not a mu-plugin or separate WP plugin?** A mu-plugin would keep running after the main plugin is deactivated/uninstalled — orphaned code that's hard to debug. A separate plugin doubles the user-facing plugin entries. The current model (owned file loaded by main plugin) means snippets activate/deactivate cleanly with the main plugin, and `uninstall.php` removes the whole directory.
+
+The cache directory is created lazily on first PHP write by `Executor::ensure_cache_dir()`, which also adds:
+
+- `index.php` — `<?php # Silence is golden.` (prevents directory listing)
+- `.htaccess` — `Deny from all` for `*.php` (belt-and-suspenders for Apache; nginx admins must add server-level rules)
+
+| `change_type` | Storage mechanism | `snapshot_type` | Undo mechanism |
+|---|---|---|---|
+| `css` | `wp_update_custom_css_post()` (a WP post, not an option) | `css` | Full CSS restored via `wp_update_custom_css_post()` |
+| `js` | `nhrada_custom_js` WP option; output in footer | `option` | Option snapshot |
+| `php` | DB (`code` column); cache compiled to `uploads/nhrada-ai-developer-assistant/snippets-cache.php` | `snippets` | Mark row `undone` in DB → rebuild cache (no file parsing needed) |
+| `option` | `update_option($file_target, $code)` | `option` | Option snapshot |
+
+Snapshot types are first-class: `option` means "a real WP option named in `target_key`", `css` means "the WP custom CSS post" (no `target_key` needed — it's a singleton), `snippets` means "rebuild cache from DB" (no `original_value`/`new_value` needed — the `code` column is the source).
 
 ### Database Table
 

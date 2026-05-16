@@ -73,6 +73,9 @@ final class Nhrada_AI_Developer_Assistant
         define('NHRADA_PLUGIN_DIR', plugin_dir_path(NHRADA_FILE));
         define('NHRADA_URL', plugins_url('', NHRADA_FILE));
         define('NHRADA_ASSETS', NHRADA_URL . '/assets');
+        $upload = wp_upload_dir();
+        define('NHRADA_SNIPPETS_DIR', $upload['basedir'] . '/nhrada-ai-developer-assistant');
+        define('NHRADA_SNIPPETS_FILE', NHRADA_SNIPPETS_DIR . '/snippets-cache.php');
     }
 
     /**
@@ -122,9 +125,8 @@ final class Nhrada_AI_Developer_Assistant
      */
     public function load_php_snippets()
     {
-        $snippets_file = WP_CONTENT_DIR . '/nhrada-snippets.php';
-        if (file_exists($snippets_file)) {
-            require_once $snippets_file;
+        if (file_exists(NHRADA_SNIPPETS_FILE)) {
+            require_once NHRADA_SNIPPETS_FILE;
         }
     }
 }
