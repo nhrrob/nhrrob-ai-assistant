@@ -248,8 +248,9 @@ class Api {
             'nhrada_claude_model'    => get_option( 'nhrada_claude_model', '' ),
             'nhrada_openai_model'    => get_option( 'nhrada_openai_model', '' ),
             'nhrada_gemini_model'    => get_option( 'nhrada_gemini_model', '' ),
-            'nhrada_debug_mode'      => (bool) get_option( 'nhrada_debug_mode', false ),
-            'wp_ai_client_available' => $wp_ai_available,
+            'nhrada_custom_instructions' => get_option( 'nhrada_custom_instructions', '' ),
+            'nhrada_debug_mode'          => (bool) get_option( 'nhrada_debug_mode', false ),
+            'wp_ai_client_available'     => $wp_ai_available,
         ) );
     }
 
@@ -291,6 +292,11 @@ class Api {
             update_option( 'nhrada_gemini_model', sanitize_text_field( $params['nhrada_gemini_model'] ) );
         }
 
+        if ( isset( $params['nhrada_custom_instructions'] ) ) {
+            $instructions = sanitize_textarea_field( $params['nhrada_custom_instructions'] );
+            update_option( 'nhrada_custom_instructions', substr( $instructions, 0, 2000 ) );
+        }
+
         if ( isset( $params['nhrada_debug_mode'] ) ) {
             update_option( 'nhrada_debug_mode', (bool) $params['nhrada_debug_mode'] );
         }
@@ -309,9 +315,9 @@ class Api {
             return new WP_Error( 'invalid_provider', 'Invalid provider.', array( 'status' => 400 ) );
         }
 
-        $bust   = (bool) $request->get_param( 'refresh' );
-        $client = new AiClient();
-        $models = $client->fetch_models( $provider, $bust );
+        $bust    = (bool) $request->get_param( 'refresh' );
+        $fetcher = new \Nhrada\AIDeveloperAssistant\ModelFetcher();
+        $models  = $fetcher->fetch( $provider, $bust );
 
         return rest_ensure_response( array( 'models' => $models ) );
     }

@@ -11,183 +11,7 @@ class AiClient {
     const OPENAI_MODEL = 'gpt-4o-mini';
     const GEMINI_MODEL = 'gemini-2.0-flash';
 
-    private function get_model( $provider ) {
-        $defaults = array(
-            'claude' => self::CLAUDE_MODEL,
-            'openai' => self::OPENAI_MODEL,
-            'gemini' => self::GEMINI_MODEL,
-        );
-        $saved = get_option( 'nhrada_' . $provider . '_model', '' );
-        return ! empty( $saved ) ? $saved : $defaults[ $provider ];
-    }
-
-    /**
-     * Return available models for a provider.
-     * Uses a 24-hour transient cache. Pass $bust = true to force a fresh fetch.
-     * Falls back to a static list if no API key is stored or the fetch fails.
-     */
-    public function fetch_models( $provider, $bust = false ) {
-        $transient = 'nhrada_models_' . $provider;
-
-        if ( ! $bust ) {
-            $cached = get_transient( $transient );
-            if ( false !== $cached ) {
-                return $cached;
-            }
-        }
-
-        $api_key = get_option( 'nhrada_' . $provider . '_api_key', '' );
-        if ( empty( $api_key ) ) {
-            return $this->get_static_models( $provider );
-        }
-
-        switch ( $provider ) {
-            case 'claude':
-                $models = $this->fetch_claude_models( $api_key );
-                break;
-            case 'openai':
-                $models = $this->fetch_openai_models( $api_key );
-                break;
-            case 'gemini':
-                $models = $this->fetch_gemini_models( $api_key );
-                break;
-            default:
-                $models = array();
-        }
-
-        if ( empty( $models ) ) {
-            return $this->get_static_models( $provider );
-        }
-
-        set_transient( $transient, $models, DAY_IN_SECONDS );
-        return $models;
-    }
-
-    private function get_static_models( $provider ) {
-        $map = array(
-            'claude' => array(
-                array( 'id' => 'claude-opus-4-7',           'name' => 'Claude Opus 4.7' ),
-                array( 'id' => 'claude-sonnet-4-7',          'name' => 'Claude Sonnet 4.7' ),
-                array( 'id' => 'claude-sonnet-4-6',          'name' => 'Claude Sonnet 4.6' ),
-                array( 'id' => 'claude-haiku-4-5-20251001',  'name' => 'Claude Haiku 4.5' ),
-            ),
-            'openai' => array(
-                array( 'id' => 'gpt-4o',      'name' => 'GPT-4o' ),
-                array( 'id' => 'gpt-4o-mini', 'name' => 'GPT-4o Mini' ),
-                array( 'id' => 'o1',          'name' => 'o1' ),
-                array( 'id' => 'o1-mini',     'name' => 'o1 Mini' ),
-            ),
-            'gemini' => array(
-                array( 'id' => 'gemini-2.5-pro',   'name' => 'Gemini 2.5 Pro' ),
-                array( 'id' => 'gemini-2.0-flash',  'name' => 'Gemini 2.0 Flash' ),
-                array( 'id' => 'gemini-1.5-pro',   'name' => 'Gemini 1.5 Pro' ),
-                array( 'id' => 'gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash' ),
-            ),
-        );
-        return isset( $map[ $provider ] ) ? $map[ $provider ] : array();
-    }
-
-    private function fetch_claude_models( $api_key ) {
-        $response = wp_remote_get( 'https://api.anthropic.com/v1/models', array(
-            'headers' => array(
-                'x-api-key'         => $api_key,
-                'anthropic-version' => '2023-06-01',
-            ),
-            'timeout' => 15,
-        ) );
-
-        if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-            $this->maybe_debug_log( 'Claude models fetch failed' );
-            return array();
-        }
-
-        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
-        $models = array();
-
-        foreach ( isset( $data['data'] ) ? $data['data'] : array() as $model ) {
-            $id = isset( $model['id'] ) ? $model['id'] : '';
-            if ( empty( $id ) ) {
-                continue;
-            }
-            $models[] = array(
-                'id'   => $id,
-                'name' => isset( $model['display_name'] ) ? $model['display_name'] : $id,
-            );
-        }
-
-        return $models;
-    }
-
-    private function fetch_openai_models( $api_key ) {
-        $response = wp_remote_get( 'https://api.openai.com/v1/models', array(
-            'headers' => array( 'Authorization' => 'Bearer ' . $api_key ),
-            'timeout' => 15,
-        ) );
-
-        if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-            $this->maybe_debug_log( 'OpenAI models fetch failed' );
-            return array();
-        }
-
-        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
-        $models = array();
-
-        foreach ( isset( $data['data'] ) ? $data['data'] : array() as $model ) {
-            $id = isset( $model['id'] ) ? $model['id'] : '';
-            // Keep only chat-capable models; exclude embeddings, audio, image, moderation variants.
-            if ( ! preg_match( '/^(gpt-|o\d)/', $id ) ) {
-                continue;
-            }
-            if ( preg_match( '/(embedding|whisper|tts|dall-e|moderation|babbage|davinci|realtime|audio|search)/', $id ) ) {
-                continue;
-            }
-            $models[] = array( 'id' => $id, 'name' => $id );
-        }
-
-        usort( $models, function ( $a, $b ) { return strcmp( $b['id'], $a['id'] ); } );
-
-        return $models;
-    }
-
-    private function fetch_gemini_models( $api_key ) {
-        $response = wp_remote_get(
-            'https://generativelanguage.googleapis.com/v1beta/models?key=' . rawurlencode( $api_key ),
-            array( 'timeout' => 15 )
-        );
-
-        if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-            $this->maybe_debug_log( 'Gemini models fetch failed' );
-            return array();
-        }
-
-        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
-        $models = array();
-
-        foreach ( isset( $data['models'] ) ? $data['models'] : array() as $model ) {
-            $methods = isset( $model['supportedGenerationMethods'] ) ? $model['supportedGenerationMethods'] : array();
-            if ( ! in_array( 'generateContent', $methods, true ) ) {
-                continue;
-            }
-            $id = str_replace( 'models/', '', isset( $model['name'] ) ? $model['name'] : '' );
-            if ( empty( $id ) ) {
-                continue;
-            }
-            $models[] = array(
-                'id'   => $id,
-                'name' => isset( $model['displayName'] ) ? $model['displayName'] : $id,
-            );
-        }
-
-        return $models;
-    }
-
-    /**
-     * @param string $user_message
-     * @param array  $context
-     * @param array  $conversation_history  Previous messages [['role'=>'user','content'=>'...'], ...]
-     */
     public function send_request( $user_message, $context, $conversation_history = array() ) {
-        // Use WP 7.0+ native AI client when available and configured.
         if ( function_exists( 'wp_supports_ai' ) && wp_supports_ai() ) {
             $builder = wp_ai_client_prompt();
             if ( $builder->is_supported_for_text_generation() ) {
@@ -217,15 +41,10 @@ class AiClient {
         return array( 'error' => 'No AI provider configured. Please add an API key in AI Developer > Settings, or configure a WordPress AI provider.' );
     }
 
-    /**
-     * Call the WordPress 7.0+ native AI client.
-     * Declares model preferences but lets WP route to whatever is configured.
-     */
     private function call_wp_ai_client( $user_message, $context, $history ) {
-        $system_prompt = $this->build_system_prompt( $context );
-
-        // Convert flat history arrays to WP Message objects (role: user|model, not user|assistant).
+        $prompt           = ( new PromptBuilder() )->build( $context );
         $history_messages = array();
+
         foreach ( $history as $h ) {
             if ( ! in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
                 continue;
@@ -237,13 +56,12 @@ class AiClient {
                     'parts' => array( array( 'type' => 'text', 'text' => $h['content'] ) ),
                 ) );
             } catch ( \Exception $e ) {
-                // Skip malformed history entries.
                 continue;
             }
         }
 
         $builder = wp_ai_client_prompt()
-            ->using_system_instruction( $system_prompt )
+            ->using_system_instruction( $prompt )
             ->using_model_preference( $this->get_model( 'claude' ), $this->get_model( 'openai' ), $this->get_model( 'gemini' ) )
             ->using_max_tokens( 4000 );
 
@@ -261,65 +79,8 @@ class AiClient {
         return $this->parse_text_response( $text );
     }
 
-    /**
-     * Call the Anthropic API directly (Bring Your Own Key).
-     */
     private function call_anthropic( $api_key, $user_message, $context, $history ) {
-        $system_prompt = $this->build_system_prompt( $context );
-
         $messages = array();
-        foreach ( $history as $h ) {
-            if ( in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
-                $messages[] = array(
-                    'role'    => $h['role'],
-                    'content' => $h['content'],
-                );
-            }
-        }
-        $messages[] = array( 'role' => 'user', 'content' => $user_message );
-
-        $body = array(
-            'model'      => $this->get_model( 'claude' ),
-            'max_tokens' => 4000,
-            'system'     => $system_prompt,
-            'messages'   => $messages,
-        );
-
-        $response = wp_remote_post( 'https://api.anthropic.com/v1/messages', array(
-            'headers' => array(
-                'x-api-key'         => $api_key,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ),
-            'body'    => wp_json_encode( $body ),
-            'timeout' => 60,
-        ) );
-
-        if ( is_wp_error( $response ) ) {
-            return array( 'error' => 'API connection error: ' . $response->get_error_message() );
-        }
-
-        $status   = wp_remote_retrieve_response_code( $response );
-        $raw_body = wp_remote_retrieve_body( $response );
-        $data     = json_decode( $raw_body, true );
-
-        if ( $status !== 200 ) {
-            $err = isset( $data['error']['message'] ) ? $data['error']['message'] : 'Unknown Claude API error';
-            $this->maybe_debug_log( 'Claude API error (' . $status . '): ' . $err );
-            return array( 'error' => $err );
-        }
-
-        $text = isset( $data['content'][0]['text'] ) ? $data['content'][0]['text'] : null;
-        return $this->parse_text_response( $text );
-    }
-
-    /**
-     * Call the OpenAI API (gpt-4o-mini).
-     */
-    private function call_openai( $api_key, $user_message, $context, $history ) {
-        $system_prompt = $this->build_system_prompt( $context );
-
-        $messages = array( array( 'role' => 'system', 'content' => $system_prompt ) );
         foreach ( $history as $h ) {
             if ( in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
                 $messages[] = array( 'role' => $h['role'], 'content' => $h['content'] );
@@ -327,101 +88,126 @@ class AiClient {
         }
         $messages[] = array( 'role' => 'user', 'content' => $user_message );
 
-        $body = array(
-            'model'      => $this->get_model( 'openai' ),
-            'messages'   => $messages,
-            'max_tokens' => 4000,
+        $data = $this->post_to_api(
+            'https://api.anthropic.com/v1/messages',
+            array(
+                'x-api-key'         => $api_key,
+                'anthropic-version' => '2023-06-01',
+                'content-type'      => 'application/json',
+            ),
+            array(
+                'model'      => $this->get_model( 'claude' ),
+                'max_tokens' => 4000,
+                'system'     => ( new PromptBuilder() )->build( $context ),
+                'messages'   => $messages,
+            ),
+            'Claude'
         );
 
-        $response = wp_remote_post( 'https://api.openai.com/v1/chat/completions', array(
-            'headers' => array(
+        if ( isset( $data['error'] ) ) {
+            return $data;
+        }
+
+        return $this->parse_text_response( isset( $data['content'][0]['text'] ) ? $data['content'][0]['text'] : null );
+    }
+
+    private function call_openai( $api_key, $user_message, $context, $history ) {
+        $messages = array( array( 'role' => 'system', 'content' => ( new PromptBuilder() )->build( $context ) ) );
+        foreach ( $history as $h ) {
+            if ( in_array( $h['role'], array( 'user', 'assistant' ), true ) ) {
+                $messages[] = array( 'role' => $h['role'], 'content' => $h['content'] );
+            }
+        }
+        $messages[] = array( 'role' => 'user', 'content' => $user_message );
+
+        $data = $this->post_to_api(
+            'https://api.openai.com/v1/chat/completions',
+            array(
                 'Authorization' => 'Bearer ' . $api_key,
                 'Content-Type'  => 'application/json',
             ),
-            'body'    => wp_json_encode( $body ),
-            'timeout' => 60,
-        ) );
+            array(
+                'model'      => $this->get_model( 'openai' ),
+                'messages'   => $messages,
+                'max_tokens' => 4000,
+            ),
+            'OpenAI'
+        );
 
-        if ( is_wp_error( $response ) ) {
-            return array( 'error' => 'OpenAI connection error: ' . $response->get_error_message() );
+        if ( isset( $data['error'] ) ) {
+            return $data;
         }
 
-        $status   = wp_remote_retrieve_response_code( $response );
-        $raw_body = wp_remote_retrieve_body( $response );
-        $data     = json_decode( $raw_body, true );
-
-        if ( $status !== 200 ) {
-            $err = isset( $data['error']['message'] ) ? $data['error']['message'] : 'Unknown OpenAI error';
-            $this->maybe_debug_log( 'OpenAI error (' . $status . '): ' . $err );
-            return array( 'error' => $err );
-        }
-
-        $text = isset( $data['choices'][0]['message']['content'] ) ? $data['choices'][0]['message']['content'] : null;
-        return $this->parse_text_response( $text );
+        return $this->parse_text_response( isset( $data['choices'][0]['message']['content'] ) ? $data['choices'][0]['message']['content'] : null );
     }
 
-    /**
-     * Call the Google Gemini API (gemini-1.5-flash — free tier).
-     */
     private function call_gemini( $api_key, $user_message, $context, $history ) {
-        $system_prompt = $this->build_system_prompt( $context );
-
         $contents = array();
         foreach ( $history as $h ) {
-            // Gemini uses 'model' instead of 'assistant'
             $role       = 'assistant' === $h['role'] ? 'model' : 'user';
             $contents[] = array( 'role' => $role, 'parts' => array( array( 'text' => $h['content'] ) ) );
         }
         $contents[] = array( 'role' => 'user', 'parts' => array( array( 'text' => $user_message ) ) );
 
-        $body = array(
-            'system_instruction' => array( 'parts' => array( array( 'text' => $system_prompt ) ) ),
-            'contents'           => $contents,
-            'generationConfig'   => array( 'maxOutputTokens' => 4000 ),
+        $data = $this->post_to_api(
+            'https://generativelanguage.googleapis.com/v1beta/models/' . $this->get_model( 'gemini' ) . ':generateContent?key=' . $api_key,
+            array( 'Content-Type' => 'application/json' ),
+            array(
+                'system_instruction' => array( 'parts' => array( array( 'text' => ( new PromptBuilder() )->build( $context ) ) ) ),
+                'contents'           => $contents,
+                'generationConfig'   => array( 'maxOutputTokens' => 4000 ),
+            ),
+            'Gemini'
         );
 
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . $this->get_model( 'gemini' ) . ':generateContent?key=' . $api_key;
+        if ( isset( $data['error'] ) ) {
+            return $data;
+        }
 
+        return $this->parse_text_response(
+            isset( $data['candidates'][0]['content']['parts'][0]['text'] )
+                ? $data['candidates'][0]['content']['parts'][0]['text']
+                : null
+        );
+    }
+
+    /**
+     * Shared HTTP POST helper — handles the identical boilerplate across all three
+     * provider call methods: send request, check WP_Error, decode JSON, check HTTP status.
+     * Returns the decoded response array on success, or ['error' => '...'] on failure.
+     */
+    private function post_to_api( $url, $headers, $body, $provider_name ) {
         $response = wp_remote_post( $url, array(
-            'headers' => array( 'Content-Type' => 'application/json' ),
+            'headers' => $headers,
             'body'    => wp_json_encode( $body ),
             'timeout' => 60,
         ) );
 
         if ( is_wp_error( $response ) ) {
-            return array( 'error' => 'Gemini connection error: ' . $response->get_error_message() );
+            return array( 'error' => $provider_name . ' connection error: ' . $response->get_error_message() );
         }
 
-        $status   = wp_remote_retrieve_response_code( $response );
-        $raw_body = wp_remote_retrieve_body( $response );
-        $data     = json_decode( $raw_body, true );
+        $status = wp_remote_retrieve_response_code( $response );
+        $data   = json_decode( wp_remote_retrieve_body( $response ), true );
 
-        if ( $status !== 200 ) {
-            $err = isset( $data['error']['message'] ) ? $data['error']['message'] : 'Unknown Gemini error';
-            $this->maybe_debug_log( 'Gemini error (' . $status . '): ' . $err );
+        if ( 200 !== $status ) {
+            $err = isset( $data['error']['message'] ) ? $data['error']['message'] : "Unknown {$provider_name} error";
+            $this->maybe_debug_log( "{$provider_name} error ({$status}): {$err}" );
             return array( 'error' => $err );
         }
 
-        $text = isset( $data['candidates'][0]['content']['parts'][0]['text'] )
-            ? $data['candidates'][0]['content']['parts'][0]['text']
-            : null;
-        return $this->parse_text_response( $text );
+        return $data;
     }
 
-    /**
-     * Parse raw text from any AI provider into the expected response array.
-     */
     private function parse_text_response( $text ) {
         if ( null === $text ) {
             return array( 'error' => 'Unexpected AI response format.' );
         }
 
-        // Strip markdown code fences if present
         $text = preg_replace( '/^```(?:json)?\s*/im', '', $text );
         $text = preg_replace( '/\s*```\s*$/im', '', $text );
         $text = trim( $text );
 
-        // Extract first JSON object if there's extra text
         if ( '{' !== substr( $text, 0, 1 ) ) {
             if ( preg_match( '/\{.*\}/s', $text, $m ) ) {
                 $text = $m[0];
@@ -438,95 +224,14 @@ class AiClient {
         return $parsed;
     }
 
-    /**
-     * Build the system prompt with site context injected.
-     */
-    private function build_system_prompt( $context ) {
-        $date         = gmdate( 'Y-m-d' );
-        $plugin_list  = isset( $context['plugin_list'] ) ? $context['plugin_list'] : 'unknown';
-        $error_log    = isset( $context['error_log'] ) ? $context['error_log'] : 'N/A';
-
-        return "You are an expert WordPress developer embedded as an AI assistant inside a WordPress admin panel. You help non-technical site owners implement changes to their website using plain English.
-
-## Site context
-WordPress version: {$context['wp_version']}
-PHP version: {$context['php_version']}
-Active theme: {$context['theme_name']} ({$context['theme_version']})
-Child theme: {$context['child_theme']}
-Active plugins: {$plugin_list}
-WooCommerce active: {$context['woocommerce']}
-Recent PHP errors: {$error_log}
-Today's date: {$date}
-
-## How to respond
-
-Always return valid JSON in this exact structure. No text outside the JSON.
-
-{
-  \"can_do\": boolean,
-  \"change_type\": \"css\" | \"js\" | \"php\" | \"option\" | \"none\",
-  \"file_target\": string | null,
-  \"code\": string | null,
-  \"description\": string,
-  \"confirmation_message\": string,
-  \"cannot_reason\": string | null,
-  \"warnings\": string | null
-}
-
-## Field definitions
-
-can_do: true if you can implement this, false if you cannot or should not.
-change_type:
-  - \"css\" = add/change styles (goes into WordPress custom CSS)
-  - \"js\" = JavaScript snippet (output in footer)
-  - \"php\" = PHP snippet (goes into managed snippets file at /wp-content/nhrada-snippets.php)
-  - \"option\" = WordPress option update via update_option()
-  - \"none\" = answering a question or diagnosing without making a change
-file_target:
-  - For css: \"custom-css\"
-  - For js: \"custom-js\"
-  - For php: \"functions-snippet\"
-  - For option: the option name e.g. \"blogname\"
-code: The complete code to apply. Must be ready to execute as-is.
-description: One or two sentence technical summary for the change log.
-confirmation_message: Friendly plain-English message for the user. Start with \"Done!\" if successful.
-cannot_reason: If can_do is false, one sentence explaining why.
-warnings: Optional note about something the user should be aware of.
-
-## Coding standards
-
-CSS:
-- Scope selectors specifically; avoid * or broad overrides
-- Add comment: /* WP AI Developer | {$date} | {task} */
-- Prefer CSS variables if the theme uses them
-
-JavaScript:
-- Wrap in document.addEventListener('DOMContentLoaded', function() { ... })
-- Use vanilla JS only (no jQuery unless the site definitely has it)
-- Add comment: // WP AI Developer | {$date} | {task}
-
-PHP:
-- Use add_action() / add_filter() hooks — never echo directly at top level
-- Wrap in if (!function_exists(...)) checks
-- No direct database queries; use WordPress functions
-- Add comment: // WP AI Developer | {$date} | {task}
-
-## Safety rules — NEVER generate code that:
-- Touches WordPress core files
-- Calls exec(), shell_exec(), system(), passthru(), or eval()
-- Accesses external URLs not already in use by the site
-- Contains DROP, TRUNCATE, or DELETE SQL statements
-- References wp-config.php
-- Deletes posts, users, orders, or any user-created content
-- Stores or transmits passwords or payment data
-
-If the request would require any of the above, set can_do to false and explain in cannot_reason.
-
-## Tone for confirmation_message
-- Friendly and plain — like a helpful developer colleague
-- One or two sentences explaining what the user will now see or experience
-- Never use technical jargon; translate everything to plain English
-- Always start with \"Done!\" for successful changes";
+    private function get_model( $provider ) {
+        $defaults = array(
+            'claude' => self::CLAUDE_MODEL,
+            'openai' => self::OPENAI_MODEL,
+            'gemini' => self::GEMINI_MODEL,
+        );
+        $saved = get_option( 'nhrada_' . $provider . '_model', '' );
+        return ! empty( $saved ) ? $saved : $defaults[ $provider ];
     }
 
     private function maybe_debug_log( $message ) {

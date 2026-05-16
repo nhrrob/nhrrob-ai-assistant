@@ -24,10 +24,32 @@ User message (React UI)
   → POST /wp-json/nhrada/v1/chat
   → Api::handle_chat()
   → AiClient::send_request()       ← picks AI provider
+      → PromptBuilder::build()     ← assembles system prompt + custom instructions
+      → post_to_api()              ← shared HTTP POST + error handling
   → Executor::apply_change()        ← Safety check, then writes change
   → Changelog::log_change() + create_snapshot()
   → response back to UI
+
+GET /wp-json/nhrada/v1/models
+  → Api::get_models()
+  → ModelFetcher::fetch()          ← transient cache → provider API → static fallback
+  → response back to UI
 ```
+
+### Class responsibilities in `includes/`
+
+| Class | File | Job |
+|---|---|---|
+| `AiClient` | `AiClient.php` | Route to WP native or BYOK provider; `post_to_api()` shared HTTP helper; `parse_text_response()` |
+| `PromptBuilder` | `PromptBuilder.php` | Assemble the system prompt from site context + custom instructions |
+| `ModelFetcher` | `ModelFetcher.php` | Fetch available model list per provider with 24h transient cache and static fallback |
+| `Executor` | `Executor.php` | Apply CSS / JS / PHP / option changes |
+| `Undo` | `Undo.php` | Revert changes |
+| `Safety` | `Safety.php` | Validate code before execution |
+| `Context` | `Context.php` | Collect site context (WP version, theme, plugins, error log) |
+| `Changelog` | `Database/Changelog.php` | DB read/write for the change log |
+| `Activator` | `Activator.php` | Create `nhrada_log` table on activation |
+| `Assets` | `Assets.php` | Register admin scripts/styles; output frontend custom JS |
 
 ### AI Provider Priority (AiClient.php)
 
@@ -52,6 +74,24 @@ Each provider has a hardcoded default (class constants) and a user-overridable W
 `fetch_models($provider, $bust)` fetches the live model list from the provider's API using the stored key, caches the result in a WP transient (`nhrada_models_{provider}`, 24h TTL), and falls back to a built-in static list if no key is saved or the fetch fails. The transient is deleted automatically when a new API key is saved. The Settings UI shows a `<select>` populated from `GET /nhrada/v1/models?provider=…` with a Refresh button (`?refresh=1`) to bypass the cache.
 
 Static fallbacks (shown when no key is saved): Claude Opus 4.7 / Sonnet 4.7 / Sonnet 4.6 / Haiku 4.5 · GPT-4o / 4o-mini / o1 / o1-mini · Gemini 2.5 Pro / 2.0 Flash / 1.5 Pro / 1.5 Flash.
+
+### System Prompt
+
+The system prompt lives in `AiClient::build_system_prompt()` — not in an external file. It has PHP variable interpolation tied to `Context.php` output (`$context['wp_version']` etc.), so externalising it would require a placeholder/replacement layer with no real benefit.
+
+The prompt structure (and why the order matters):
+
+1. **Role definition** — who the AI is
+2. **Site context** — auto-detected (WP version, PHP, theme, plugins, errors, date) + `nhrada_custom_instructions` injected here as "Site admin notes"
+3. **Response format** — the JSON contract (immutable)
+4. **Coding standards** — immutable
+5. **Safety rules** — immutable, always last (last position = strongest influence on model behaviour)
+
+Custom instructions go in position 2 so they inform the AI about the site *before* it decides what to output. Safety rules at position 5 cannot be overridden by user text. Even if a user writes adversarial instructions, `parse_text_response()` expects valid JSON — deviation fails gracefully.
+
+### Custom Instructions
+
+`nhrada_custom_instructions` WP option — site admin can add context the AI wouldn't otherwise know: site purpose, preferred plugins, language, design constraints, etc. Stored via `sanitize_textarea_field()` + 2000-char hard limit (enforced in both `save_settings()` and the textarea `maxLength`). Shown as a textarea in Settings > Customization.
 
 ### AI Response Contract
 

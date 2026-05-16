@@ -24,6 +24,7 @@ const Settings = () => {
         nhrada_claude_model: '',
         nhrada_openai_model: '',
         nhrada_gemini_model: '',
+        nhrada_custom_instructions: '',
         nhrada_debug_mode: false,
     });
     const [wpAiAvailable, setWpAiAvailable] = useState(false);
@@ -61,6 +62,7 @@ const Settings = () => {
                     nhrada_claude_model: res.nhrada_claude_model || '',
                     nhrada_openai_model: res.nhrada_openai_model || '',
                     nhrada_gemini_model: res.nhrada_gemini_model || '',
+                    nhrada_custom_instructions: res.nhrada_custom_instructions || '',
                     nhrada_debug_mode: !!res.nhrada_debug_mode,
                 });
                 setWpAiAvailable(!!res.wp_ai_client_available);
@@ -293,6 +295,25 @@ const Settings = () => {
                             </Field>
                         </>
                     )}
+                </div>
+
+                <div className="nhrada-settings-section">
+                    <h2 className="nhrada-section-title">Customization</h2>
+
+                    <Field
+                        label="Custom Instructions"
+                        description="Add extra context about your site — its purpose, preferred plugins, design constraints, or business rules. The AI uses this alongside the auto-detected site info. Max 2000 characters. This does not override safety rules or the response format."
+                    >
+                        <textarea
+                            className="nhrada-input-text nhrada-textarea"
+                            value={settings.nhrada_custom_instructions}
+                            onChange={e => set('nhrada_custom_instructions', e.target.value.slice(0, 2000))}
+                            placeholder={"e.g. This is a restaurant website. Prefer Elementor for layout changes. Always keep the header sticky. The site language is Brazilian Portuguese."}
+                            rows={5}
+                            maxLength={2000}
+                        />
+                        <p className="nhrada-char-count">{settings.nhrada_custom_instructions.length} / 2000</p>
+                    </Field>
                 </div>
 
                 <div className="nhrada-settings-section">
