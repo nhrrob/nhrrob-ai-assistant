@@ -109,7 +109,7 @@ class Admin {
                 admin_url( 'admin.php?page=nhrada-assistant' ),
                 __( 'Open', 'nhrrob-ai-developer-assistant' )
             );
-            array_unshift( $links, $settings_link );
+            array_push( $links, $settings_link );
         }
         return $links;
     }
