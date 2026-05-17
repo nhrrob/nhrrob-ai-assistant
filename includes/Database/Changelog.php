@@ -10,6 +10,7 @@ class Changelog {
     public function log_change( $request_msg, $description, $change_type, $file_target, $code = '' ) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->insert(
             $wpdb->prefix . 'nhrada_log',
             array(
@@ -31,6 +32,7 @@ class Changelog {
     public function create_snapshot( $change_id, $snapshot_type, $target_key, $original_value, $new_value ) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->update(
             $wpdb->prefix . 'nhrada_log',
             array(

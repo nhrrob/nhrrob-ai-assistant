@@ -20,15 +20,18 @@ $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}nhrada_log");
 // phpcs:enable
 
 // Remove the managed snippets cache directory from uploads
-$upload_dir   = wp_upload_dir();
-$snippets_dir = $upload_dir['basedir'] . '/nhrada-ai-developer-assistant';
-if (is_dir($snippets_dir)) {
-    foreach (glob($snippets_dir . '/{,.}*', GLOB_BRACE) as $file) {
-        if (is_file($file)) {
-            @unlink($file);
+$nhrada_upload_dir   = wp_upload_dir();
+$nhrada_snippets_dir = $nhrada_upload_dir['basedir'] . '/nhrada-ai-developer-assistant';
+if ( is_dir( $nhrada_snippets_dir ) ) {
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    WP_Filesystem();
+    global $wp_filesystem;
+    foreach ( glob( $nhrada_snippets_dir . '/{,.}*', GLOB_BRACE ) as $nhrada_file ) {
+        if ( is_file( $nhrada_file ) ) {
+            wp_delete_file( $nhrada_file );
         }
     }
-    @rmdir($snippets_dir);
+    $wp_filesystem->rmdir( $nhrada_snippets_dir );
 }
 
 // Delete options

@@ -12,6 +12,7 @@ class Undo {
     public function revert_change( $change_id ) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $change = $wpdb->get_row( $wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}nhrada_log WHERE id = %d AND record_type = 'change' AND status = 'applied'",
             $change_id
@@ -31,6 +32,7 @@ class Undo {
             $success = $this->revert_css( $change->original_value );
         } elseif ( 'snippets' === $change->snapshot_type ) {
             // Mark undone in DB first so the cache rebuild excludes this snippet.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->update(
                 $wpdb->prefix . 'nhrada_log',
                 array( 'status' => 'undone' ),
@@ -49,6 +51,7 @@ class Undo {
         }
 
         if ( $success ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->update(
                 $wpdb->prefix . 'nhrada_log',
                 array( 'status' => 'undone' ),

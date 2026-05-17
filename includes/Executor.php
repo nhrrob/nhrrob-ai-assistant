@@ -107,7 +107,7 @@ class Executor {
 
         if ( empty( $snippets ) ) {
             if ( file_exists( NHRADA_SNIPPETS_FILE ) ) {
-                unlink( NHRADA_SNIPPETS_FILE );
+                wp_delete_file( NHRADA_SNIPPETS_FILE );
             }
             return;
         }

@@ -52,7 +52,7 @@ class Admin {
             return;
         }
 
-        $server = isset( $_SERVER['SERVER_SOFTWARE'] ) ? $_SERVER['SERVER_SOFTWARE'] : '';
+        $server = isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '';
         if ( stripos( $server, 'nginx' ) === false ) {
             return;
         }
@@ -66,7 +66,7 @@ class Admin {
         }
 
         $upload        = wp_upload_dir();
-        $snippets_path = parse_url( $upload['baseurl'] . '/nhrada-ai-developer-assistant', PHP_URL_PATH );
+        $snippets_path = wp_parse_url( $upload['baseurl'] . '/nhrada-ai-developer-assistant', PHP_URL_PATH );
         $nonce         = wp_create_nonce( 'nhrada_dismiss_nginx' );
         ?>
         <div class="notice notice-warning is-dismissible" id="nhrada-nginx-notice">

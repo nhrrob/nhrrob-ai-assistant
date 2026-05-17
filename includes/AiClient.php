@@ -239,7 +239,7 @@ class AiClient {
     private function maybe_debug_log( $message ) {
         $settings = get_option( 'nhrada_settings', array() );
         if ( ! empty( $settings['debug_mode'] ) ) {
-            error_log( '[NHRAA] ' . $message );
+            error_log( '[NHRAA] ' . $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
         }
     }
 }

@@ -81,6 +81,7 @@ class Api {
     public function get_messages( WP_REST_Request $request ) {
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $rows = $wpdb->get_results(
             "SELECT id, role, content, change_id, created_at
              FROM {$wpdb->prefix}nhrada_log
@@ -113,6 +114,7 @@ class Api {
         }
 
         // Log the user message
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->insert(
             $wpdb->prefix . 'nhrada_log',
             array(
@@ -125,6 +127,7 @@ class Api {
         );
 
         // Build conversation history for context (last 10 messages)
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $history_rows = $wpdb->get_results(
             "SELECT role, content
              FROM {$wpdb->prefix}nhrada_log
@@ -181,6 +184,7 @@ class Api {
             $assistant_format[]          = '%d';
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->insert( $wpdb->prefix . 'nhrada_log', $assistant_data, $assistant_format );
 
         $change_type = isset( $ai_response['change_type'] ) ? $ai_response['change_type'] : 'none';
@@ -226,6 +230,7 @@ class Api {
      */
     public function get_history( WP_REST_Request $request ) {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $results = $wpdb->get_results(
             "SELECT * FROM {$wpdb->prefix}nhrada_log WHERE record_type = 'change' ORDER BY created_at DESC LIMIT 100",
             ARRAY_A
@@ -318,6 +323,7 @@ class Api {
      */
     public function clear_history( WP_REST_Request $request ) {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $wpdb->query( "DELETE FROM {$wpdb->prefix}nhrada_log WHERE record_type = 'message'" );
         return rest_ensure_response( array( 'success' => true ) );
     }
